@@ -1,0 +1,18 @@
+{
+  "name": "vsm-marp-socrates",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Skeletal Marp slideshow project with sparse text and image-forward layout.",
+  "scripts": {
+    "preview": "marp slides/deck.md --watch --preview",
+    "build:html": "marp slides/deck.md --html --allow-local-files -o output/deck.html",
+    "build:pdf": "marp slides/deck.md --allow-local-files --pdf -o output/deck.pdf",
+    "build:pptx": "marp slides/deck.md --allow-local-files --pptx -o output/deck.pptx",
+    "build": "npm run build:html && npm run build:pdf && npm run build:pptx",
+    "check": "marp slides/deck.md --html --allow-local-files -o output/_check.html",
+    "test": "npm run check"
+  },
+  "devDependencies": {
+    "@marp-team/marp-cli": "^4.0.0"
+  }
+}

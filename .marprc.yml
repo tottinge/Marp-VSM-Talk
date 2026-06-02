@@ -1,0 +1,4 @@
+themeSet:
+  - ./themes/socrates.css
+allowLocalFiles: true
+html: true
