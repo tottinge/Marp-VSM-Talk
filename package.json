@@ -12,7 +12,7 @@
     "build:pptx": "marp slides/deck.md --allow-local-files --pptx -o output/deck.pptx",
     "build": "npm run build:html && npm run build:pdf && npm run build:pptx",
     "tidy": "./tidy",
-    "check": "marp slides/deck.md --html --allow-local-files -o output/_check.html",
+    "check": "marp slides/deck.md --html --allow-local-files -o output/_check.html && node scripts/check-footer-overlap.mjs",
     "test": "npm run check"
   },
   "devDependencies": {

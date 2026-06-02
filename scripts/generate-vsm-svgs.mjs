@@ -64,6 +64,89 @@ function wrapText(text, maxChars) {
   if (current) lines.push(current)
   return lines
 }
+const durationUnitAliasMap = new Map([
+  ['m', 'm'],
+  ['min', 'm'],
+  ['mins', 'm'],
+  ['minute', 'm'],
+  ['minutes', 'm'],
+  ['h', 'h'],
+  ['hr', 'h'],
+  ['hrs', 'h'],
+  ['hour', 'h'],
+  ['hours', 'h'],
+  ['d', 'd'],
+  ['day', 'd'],
+  ['days', 'd'],
+  ['w', 'w'],
+  ['wk', 'w'],
+  ['wks', 'w'],
+  ['week', 'w'],
+  ['weeks', 'w'],
+])
+
+function normalizeDurationUnit(rawUnit) {
+  if (!rawUnit) return null
+  return durationUnitAliasMap.get(String(rawUnit).toLowerCase().trim()) ?? null
+}
+
+function parseStrictNumber(value) {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : null
+  }
+  const text = String(value ?? '').trim()
+  if (!text) return null
+  if (!/^[-+]?(?:\d+\.?\d*|\.\d+)$/.test(text)) return null
+  const numeric = Number.parseFloat(text)
+  return Number.isFinite(numeric) ? numeric : null
+}
+
+function parseCtAsDuration(ctRaw) {
+  const text = String(ctRaw ?? '').trim()
+  const match = text.match(/^([-+]?(?:\d+\.?\d*|\.\d+))\s*([a-zA-Z]+)$/)
+  if (!match) return null
+
+  const value = Number.parseFloat(match[1])
+  const unit = normalizeDurationUnit(match[2])
+  if (!Number.isFinite(value) || value < 0 || unit === null) return null
+
+  return { value, unit }
+}
+
+function parseCtAsRate(ctRaw) {
+  const text = String(ctRaw ?? '').trim()
+  const match = text.match(/^([-+]?(?:\d+\.?\d*|\.\d+))\s*(?:\/|per)\s*([a-zA-Z]+)$/i)
+  if (!match) return null
+
+  const value = Number.parseFloat(match[1])
+  const unit = normalizeDurationUnit(match[2])
+  if (!Number.isFinite(value) || value <= 0 || unit === null) return null
+
+  return { value, unit }
+}
+
+function formatMetricNumber(value) {
+  const rounded = Math.round((value + Number.EPSILON) * 100) / 100
+  if (Number.isInteger(rounded)) return String(rounded)
+  return rounded.toFixed(2).replace(/\.?0+$/, '')
+}
+
+function deriveWaitTime(queueRaw, ctRaw) {
+  const queueValue = parseStrictNumber(queueRaw)
+  if (queueValue === null || queueValue < 0 || ctRaw === undefined || ctRaw === null) return null
+
+  const durationCt = parseCtAsDuration(ctRaw)
+  if (durationCt !== null) {
+    return `${formatMetricNumber(queueValue * durationCt.value)}${durationCt.unit}`
+  }
+
+  const rateCt = parseCtAsRate(ctRaw)
+  if (rateCt !== null) {
+    return `${formatMetricNumber(queueValue / rateCt.value)}${rateCt.unit}`
+  }
+
+  return null
+}
 
 function normalizeStage(stage, index) {
   if (!stage || typeof stage !== 'object') {
@@ -74,10 +157,12 @@ function normalizeStage(stage, index) {
   }
 
   const qualityGate = stage.quality_gate ?? stage.qualityGate ?? null
+  const explicitWt = stage.wt === undefined || stage.wt === null ? null : String(stage.wt).trim()
+  const computedWt = explicitWt === null || explicitWt === '' ? deriveWaitTime(stage.queue, stage.ct) : null
   return {
     name: String(stage.name),
     ct: String(stage.ct ?? '?'),
-    wt: String(stage.wt ?? '?'),
+    wt: explicitWt && explicitWt !== '' ? explicitWt : computedWt ?? '?',
     queue: stage.queue === undefined || stage.queue === null ? null : String(stage.queue),
     queueLabel: String(stage.queue_label ?? stage.queueLabel ?? 'Queue'),
     qualityGate:

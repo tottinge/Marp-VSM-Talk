@@ -1,0 +1,13 @@
+title: Review Bottleneck
+subtitle: Strong developers, overwhelmed reviewers
+slug: review-bottleneck
+stages:
+  - name: Development
+    queue: 4
+    ct: 1d
+  - name: Review
+    queue: 22
+    ct: 10m
+  - name: Test
+    queue: 2
+    ct: 20m

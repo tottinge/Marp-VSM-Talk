@@ -1,0 +1,16 @@
+title: High-Performance Team
+subtitle: Small batches, low WIP, fast feedback
+slug: high-performance-team
+stages:
+  - name: Ready
+    queue: 3
+    ct: 15m
+  - name: Development
+    queue: 2
+    ct: 4h
+  - name: Review
+    queue: 1
+    ct: 10m
+  - name: Deploy
+    queue: 0
+    ct: 5m

@@ -1,0 +1,16 @@
+title: Too Much WIP Team
+subtitle: The classic Scrum team with too much started work
+slug: too-much-wip-team
+stages:
+  - name: Development
+    queue: 18
+    ct: 1d
+  - name: Review
+    queue: 12
+    ct: 15m
+  - name: Test
+    queue: 8
+    ct: 30m
+  - name: Deploy
+    queue: 2
+    ct: 10m

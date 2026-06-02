@@ -1,0 +1,13 @@
+title: Merge Hell Team
+subtitle: Coding is smooth, integration is not
+slug: merge-hell-team
+stages:
+  - name: Development
+    queue: 0
+    ct: 2d
+  - name: Merge
+    queue: 15
+    ct: 1h
+  - name: Integration
+    queue: 72
+    ct: 20m

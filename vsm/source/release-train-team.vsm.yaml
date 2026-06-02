@@ -1,0 +1,19 @@
+title: Release Train Team
+subtitle: Everything done, nothing delivered
+slug: release-train-team
+stages:
+  - name: Development
+    queue: 0
+    ct: 2d
+  - name: Review
+    queue: 0
+    ct: 10m
+  - name: Test
+    queue: 0
+    ct: 30m
+  - name: Ready for Release
+    queue: 40
+    ct: 12h
+  - name: Deploy
+    queue: 1
+    ct: 15m

@@ -1,0 +1,13 @@
+title: Dependency Team
+subtitle: Looks healthy internally, ships slowly externally
+slug: dependency-team
+stages:
+  - name: Development
+    queue: 1
+    ct: 2d
+  - name: Review
+    queue: 3
+    ct: 20m
+  - name: Acceptance
+    queue: 432
+    ct: 30m

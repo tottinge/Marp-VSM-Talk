@@ -1,0 +1,10 @@
+title: Partial Completion Team
+subtitle: Work looks done but cannot finish as a unit
+slug: partial-completion-team
+stages:
+  - name: Development
+    queue: 1
+    ct: 3d
+  - name: Acceptance
+    queue: 12
+    ct: 1d

@@ -1,0 +1,16 @@
+title: Shift-Right Team
+subtitle: Quality discovered late
+slug: shift-right-team
+stages:
+  - name: Development
+    queue: 3
+    ct: 2d
+  - name: Review
+    queue: 4
+    ct: 15m
+  - name: Test
+    queue: 42
+    ct: 4h
+    quality_gate:
+      pass_rate: 70%
+      reject_to: Development

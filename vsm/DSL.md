@@ -47,8 +47,12 @@ Stage:
 - `name` (required): process/station name
 - `queue` (optional): queue count shown in an inventory triangle before the stage
 - `queue_label` (optional): text label above queue triangle (default: `Queue`)
-- `ct` (optional): cycle time value
-- `wt` (optional): wait time value
+- `ct` (optional): cycle-time input used for display and wait-time math
+  - Duration form (time per item): `2d`, `4h`, `30m`, `1w`
+  - Rate form (items per time): `2/day`, `3/h`, `10/week`
+- `wt` (optional): wait time value; if omitted, generator auto-derives from `queue` + `ct`
+  - Duration CT form uses `wt = queue × ct` (for example, `queue: 10`, `ct: 0.5d` gives `wt: 5d`)
+  - Rate CT form uses `wt = queue ÷ ct` (for example, `queue: 10`, `ct: 2/day` gives `wt: 5d`)
 - `quality_gate` (optional): gate details shown in stage box footer
   - `pass_rate`
   - `reject_to`

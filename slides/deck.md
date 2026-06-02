@@ -3,7 +3,7 @@ marp: true
 theme: otter-professional
 paginate: true
 size: 16:9
-header: "Faster and More Predictable — workshop"
+header: '<img class="topbar-logo" src="../AgileOtter-Logo-Small.jpg" alt="Agile Otter logo" /><span class="topbar-text">Tim Ottinger · Agile Otter</span><img class="topbar-qr" src="../assets/images/agile-otter-qr.svg" alt="Agile Otter QR code" />'
 footer: "Draft workshop scaffold"
 ---
 
@@ -71,57 +71,94 @@ footer: "Draft workshop scaffold"
 - Is this system optimized to start work or finish work?
 
 ---
+<!-- _class: workshop -->
+---
+# Long Wait Time Causes
+
+
+| Usually First    | Check Next          |
+| ---------------- | ------------------- |
+| Too much WIP     | Review bottleneck   |
+| Large work items | Partial completion  |
+| Rework           | Merge delays        |
+| Dependencies     | Release constraints |
+
+
+**Wait Time ≫ Cycle Time → investigate the system**
+
+
+---
 # Scenario sequence
-1. Healthy Team
-2. Specialist Organization
-3. High Inventory
-4. Scatter-Gather
-5. Shift Left / Higher First-Time-Through
-6. AI Amplification
-7. Constraint Migration
-8. Capstone Diagnosis
+1. The "Too Much WIP" Team
+2. The Review Bottleneck
+3. The Shift-Right Team
+4. The Dependency Team
+5. The Partial Completion Team
+6. The Merge Hell Team
+7. The Release Train Team
+8. The High-Performance Team
 
 ---
 <!-- _class: practice -->
-# Scenario 1 — Healthy Team
-![w:940](../assets/images/placeholder-01.svg)
-<div class="checkpoint">Prompt: What keeps queue levels stable here?</div>
+# Scenario 1 — The "Too Much WIP" Team
+![w:940](../assets/images/vsm-generated/too-much-wip-team.svg)
+- Backlog `△ 120`, Ready `△ 25`
+- Lesson: Work isn't moving slowly. Too much work is started.
+- Improvement: Reduce WIP.
 
 ---
 <!-- _class: practice -->
-# Scenario 2 — Specialist Organization
-![w:940](../assets/images/placeholder-02.svg)
-<div class="checkpoint">Prompt: Which handoff first becomes a visible queue?</div>
+# Scenario 2 — The Review Bottleneck
+![w:940](../assets/images/vsm-generated/review-bottleneck.svg)
+- Lesson: Review takes minutes. Waiting for review takes days.
+- Improvement: Smaller PRs, more reviewers, earlier review.
 
 ---
 <!-- _class: practice -->
-# Scenario 3 — High Inventory
-![w:940](../assets/images/placeholder-01.svg)
-<div class="checkpoint">Prompt: Use Little’s Law intuition — what happens to lead time as inventory rises?</div>
+# Scenario 3 — The Shift-Right Team
+![w:940](../assets/images/vsm-generated/shift-right-team.svg)
+- Rework loop: `30%` return to Development.
+- Lesson: Testing isn't the bottleneck. Defects are.
+- Improvement: Move quality practices into development.
+- This is a great Quality Gates Calculator example.
 
 ---
 <!-- _class: practice -->
-# Scenario 4 — Scatter-Gather
-![w:940](../assets/images/placeholder-02.svg)
-<div class="checkpoint">Prompt: Where does synchronization dominate elapsed time?</div>
+# Scenario 4 — The Dependency Team
+![w:940](../assets/images/vsm-generated/dependency-team.svg)
+- Investigation: Why 9 days?
+- Waiting on: Security Team, Database Team, Operations Team.
+- Lesson: Dependencies dominate lead time.
 
 ---
 <!-- _class: practice -->
-# Scenario 5 — Shift Left / Higher FTT
-![w:940](../assets/images/placeholder-01.svg)
-<div class="checkpoint">Prompt: Which loops disappear when first-time-through improves?</div>
+# Scenario 5 — The Partial Completion Team
+![w:740](../assets/images/vsm-generated/partial-completion-team.svg)
+- Investigation: Frontend/backend complete but docs missing (or 4 of 5 stories complete).
+- Lesson: Almost done is not done; synchronization effects dominate.
 
 ---
 <!-- _class: practice -->
-# Scenario 6 — AI Amplification
-![w:940](../assets/images/placeholder-02.svg)
-<div class="checkpoint">Prompt: What got faster? What queue got longer?</div>
+# Scenario 6 — The Merge Hell Team
+![w:940](../assets/images/vsm-generated/merge-hell-team.svg)
+- Additional metrics: Conflict Rate `25%`, Merge Failures `12%`.
+- Lesson: Coding is not the constraint. Branching strategy is.
+- Connects directly to Tornhill's work.
 
 ---
 <!-- _class: practice -->
-# Scenario 7 — Constraint Migration
-![w:940](../assets/images/placeholder-01.svg)
-<div class="checkpoint">Prompt: After one bottleneck improves, where does the new constraint appear?</div>
+# Scenario 7 — The Release Train Team
+![w:940](../assets/images/vsm-generated/release-train-team.svg)
+- Lesson: Release batching destroys flow.
+- Improvement: Smaller releases.
+
+---
+<!-- _class: practice -->
+# Scenario 8 — The High-Performance Team
+![w:940](../assets/images/vsm-generated/high-performance-team.svg)
+- Quality gates: Static Analysis `98%`, Unit Tests `97%`, Integration `95%`.
+- Lesson: Nothing magical.
+- Small batches. Low WIP. Fast feedback. Strong quality practices.
 
 ---
 <!-- _class: workshop -->
