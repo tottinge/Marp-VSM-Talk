@@ -1,0 +1,20 @@
+title: Healthy Team
+subtitle: Baseline flow snapshot
+slug: healthy-team
+stages:
+  - name: Analysis
+    queue: 9
+    ct: 2d
+    wt: 18d
+  - name: Design
+    queue: 11
+    ct: 1d
+    wt: 11d
+  - name: Development
+    queue: 14
+    ct: 5d
+    wt: 70d
+  - name: Test
+    queue: 7
+    ct: 3d
+    wt: 21d

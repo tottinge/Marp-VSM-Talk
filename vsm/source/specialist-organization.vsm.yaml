@@ -1,0 +1,23 @@
+title: Specialist Organization
+subtitle: Queue growth at handoffs
+slug: specialist-organization
+stages:
+  - name: Requirements Analysis
+    queue: 14
+    ct: 2d
+    wt: 24d
+  - name: UX and Design
+    queue: 21
+    ct: 2d
+    wt: 30d
+  - name: Development
+    queue: 33
+    ct: 6d
+    wt: 88d
+    quality_gate:
+      pass_rate: 82%
+      reject_to: Development
+  - name: Test and Certification
+    queue: 18
+    ct: 4d
+    wt: 41d
