@@ -1,4 +1,4 @@
 themeSet:
-  - ./themes/socrates.css
+  - ./themes/otter-professional.css
 allowLocalFiles: true
 html: true
