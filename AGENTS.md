@@ -39,6 +39,12 @@ When updating workshop materials:
 5. Prefer flow/system effects over individual-performance framing.
 6. Keep queue, gather, constraint, and rework visibility central.
 7. Run `./run_tests`.
+8. If cleanup/formatting is needed, run `./tidy`.
+
+## Script-first workflow
+- For testing and validation, use `./run_tests` (not direct `npm test` / `npm run check`).
+- For cleanup and formatting, use `./tidy` (not ad-hoc cleanup commands).
+- If dependencies change or new upstream changes are pulled, run `./prepare` to refresh the environment.
 
 ## Upcoming-session focus
 Upcoming sessions should focus on generating VSM graphics and behavior visuals:
