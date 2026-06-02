@@ -1,3 +1,5 @@
 node_modules/
 output/
 !output/.gitkeep
+assets/images/vsm-generated/*
+!assets/images/vsm-generated/.gitkeep

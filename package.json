@@ -5,6 +5,8 @@
   "description": "Skeletal Marp slideshow project with sparse text and image-forward layout.",
   "scripts": {
     "preview": "marp slides/deck.md --watch --preview",
+    "generate": "./generate",
+    "vsm:generate": "node scripts/generate-vsm-svgs.mjs",
     "build:html": "marp slides/deck.md --html --allow-local-files -o output/deck.html",
     "build:pdf": "marp slides/deck.md --allow-local-files --pdf -o output/deck.pdf",
     "build:pptx": "marp slides/deck.md --allow-local-files --pptx -o output/deck.pptx",
@@ -15,6 +17,7 @@
   },
   "devDependencies": {
     "@marp-team/marp-cli": "^4.0.0",
-    "prettier": "^3.6.2"
+    "prettier": "^3.6.2",
+    "yaml": "^2.8.1"
   }
 }
