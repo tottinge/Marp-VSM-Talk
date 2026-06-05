@@ -200,6 +200,81 @@ Treat defects as flow problems, not merely quality problems.
 
 ------------------------------------------------------------------------
 
+## Quality Is Throughput Protection
+
+### Principle
+
+> Quality protects throughput by reducing rework, waiting, and defect
+> amplification.
+
+### Source
+
+Ottinger synthesis drawing from:
+
+-   Lean flow and waste reduction
+-   Quality engineering traditions (Deming/Crosby lineage)
+-   Continuous delivery feedback economics
+
+### Notes
+
+Used to reframe quality from compliance activity to flow protection.
+
+------------------------------------------------------------------------
+
+## AI Amplifies Existing System Dynamics
+
+### Principle
+
+> AI often accelerates work entering the system faster than review,
+> integration, and understanding can absorb it.
+
+### Source
+
+Faros AI Whiplash findings, interpreted through Ottinger flow framing.
+
+### Notes
+
+Supports distinction between local productivity gains and system
+throughput outcomes.
+
+------------------------------------------------------------------------
+
+## Bottleneck Migration Toward Integration
+
+### Principle
+
+> When code generation becomes cheaper, integration and understanding
+> often become the dominant constraints.
+
+### Source
+
+Adam Tornhill, \"Why Merge Conflicts Became the New Bottleneck\".
+
+### Notes
+
+Provides modern evidence for constraint migration in AI-assisted
+development environments.
+
+------------------------------------------------------------------------
+
+## Prompt Quality as an Upstream Quality Gate
+
+### Principle
+
+Prompt quality behaves like an upstream quality gate that shapes
+downstream reject rates and rework load.
+
+### Source
+
+Ottinger workshop synthesis (knowledge representation + quality-gate
+thinking).
+
+### Notes
+
+Treat prompt engineering as flow design, not merely tool usage.
+
+------------------------------------------------------------------------
+
 # Suggested Reference Sheet Structure
 
 ## Foundational Theories

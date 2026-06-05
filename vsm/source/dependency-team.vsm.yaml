@@ -9,5 +9,5 @@ stages:
     queue: 3
     ct: 20m
   - name: Acceptance
-    queue: 432
-    ct: 30m
+    queue: 18
+    ct: 12h

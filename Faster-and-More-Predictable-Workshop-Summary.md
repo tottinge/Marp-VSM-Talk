@@ -4,6 +4,7 @@
 
 This workshop is not primarily about teaching Value Stream Mapping
 notation.
+The true subject is flow in software delivery systems.
 
 Participants should learn to:
 
@@ -11,11 +12,34 @@ Participants should learn to:
 2.  Draw a VSM.
 3.  Diagnose a delivery system using a VSM.
 4.  Improve a delivery system using evidence from a VSM.
+5.  Detect hidden rework.
+6.  Shift quality activities earlier.
+7.  Evaluate AI-assisted development through a flow lens.
+8.  Redesign delivery systems to improve first-pass success.
 
 The VSM is a diagnostic instrument, not the subject of study.
+Participants should leave able to diagram, understand, measure, and
+improve real software delivery systems.
 
 ------------------------------------------------------------------------
 
+# Core Thesis
+
+Flow is the movement of knowledge through a delivery system.
+
+Quality gates measure whether that knowledge is usable.
+
+Rework occurs when knowledge is incomplete, ambiguous, inconsistent, or
+incorrect.
+
+Shift-left improves flow because it improves information quality earlier.
+
+AI amplifies both good and bad information.
+
+Therefore, the highest-leverage improvement is usually not faster
+coding. It is better knowledge representation and earlier validation.
+
+------------------------------------------------------------------------
 # Core Learning Objectives
 
 By the end of the workshop participants should be able to:
@@ -162,6 +186,44 @@ High first-time-through reduces:
 
 ------------------------------------------------------------------------
 
+## Additional Principle Emphases
+
+### Quality Is Throughput Protection
+
+Quality is not decoration or compliance; it protects throughput by
+reducing rework, waiting, coordination cost, and defect amplification.
+
+### Collaboration Is a Throughput Optimization Strategy
+
+Pairing, ensemble work, shared ownership, and continuous integration are
+not just cultural preferences; they improve first-pass yield, knowledge
+distribution, integration success, and predictability.
+
+### Local Efficiency Is Not System Throughput
+
+Utilization is not throughput.
+
+Activity is not delivery.
+
+More coding can increase inventory unless quality and integration stay
+high.
+
+### Most Delay Is Waiting
+
+Flow efficiency is usually low in software delivery systems.
+
+Participants should experience small amounts of active work and large
+amounts of waiting/rework so this becomes concrete rather than abstract.
+
+### Slow Coding Can Accelerate Delivery
+
+Shift-left practices such as TDD, pairing, ensemble work, story
+refinement, CI, and better prompt/spec quality can reduce raw coding
+speed while improving throughput, predictability, quality, and delivery
+frequency.
+
+------------------------------------------------------------------------
+
 # Theory Sources
 
 ## Faster and More Predictable
@@ -251,30 +313,36 @@ Teaming is a flow intervention.
 
 # AI Discussion
 
-Avoid claiming:
+Treat AI as a flow topic, not only a coding topic.
 
-> AI moved the constraint.
+AI changes:
 
-Evidence does not prove coding was generally the system constraint.
+-   Code production rate
+-   Integration load
+-   Review load
+-   Knowledge representation requirements
 
-Prefer:
+Do not assume local productivity gains create system throughput gains.
 
-> AI accelerates work entering the system.
+Use Faros AI Whiplash findings to illustrate that increased output can
+increase:
 
-AI appears to amplify existing system dynamics.
+-   Rework
+-   Review burden
+-   Integration failures
+-   Knowledge debt
 
-The Faros findings are useful because they show:
+Use Tornhill's merge-conflict bottleneck framing to show likely
+constraint migration toward:
 
--   More work started
--   More PRs
--   More review burden
--   More waiting
--   Longer lead times
+-   Integration
+-   Merge conflict resolution
+-   Code review
+-   Knowledge transfer and understanding
 
-Interpretation:
+Prompt quality should be treated as an upstream quality gate.
 
-AI often amplifies Scatter-Gather and increases demand on existing
-coordination mechanisms.
+Poor prompt quality creates downstream rework.
 
 ------------------------------------------------------------------------
 
@@ -353,7 +421,15 @@ Only after participants begin asking about rework.
 
 # Ottinger Extensions
 
-Introduce later.
+Use these as first-class elements once participants are reading maps with
+confidence.
+
+1.  Queue population shown explicitly in inventory triangles.
+2.  Wait time shown at each station, and derived from queue population +
+    cycle time when needed.
+3.  Quality gates with pass rates.
+4.  Explicit Reject-To destinations.
+5.  Rework topology represented as a network, not just a linear chain.
 
 Quality Gate notation includes:
 
@@ -382,6 +458,31 @@ Show cumulative effect of multiple quality gates.
 
 Participants often underestimate the impact of seemingly good pass
 rates.
+
+Key insight:
+
+Several "pretty good" gates can combine into poor end-to-end yield.
+
+------------------------------------------------------------------------
+# Quality Gate Thinking
+
+Treat gates as information filters.
+
+At each gate ask:
+
+-   What enters?
+-   What leaves?
+-   What passes?
+-   What gets rejected?
+-   Where does rejected work go?
+
+Metrics to emphasize:
+
+-   First Pass Yield (FPY)
+-   Rolled Throughput Yield (RTY)
+-   Percent Complete and Accurate
+-   Defect amplification
+-   Rework load
 
 ------------------------------------------------------------------------
 
@@ -416,14 +517,101 @@ Avoid immediately presenting theory.
 
 # Candidate Scenario Sequence
 
-1.  Healthy Team
-2.  Specialist Organization
-3.  High Inventory Organization
-4.  Scatter-Gather
-5.  Shift Left / Higher First-Time-Through
-6.  AI Amplification
-7.  Constraint Migration
-8.  Capstone Diagnosis
+1.  Too Much WIP Team
+2.  Review Bottleneck
+3.  Shift-Right Team
+4.  Dependency Team
+5.  Partial Completion Team
+6.  Merge Hell Team
+7.  Release Train Team
+8.  High-Performance Team
+
+------------------------------------------------------------------------
+
+# Workshop Structure (No Theory-Practice Split)
+
+Every hour should include brief framing, hands-on exercise, and debrief.
+
+## 10:00-11:00 Why Is Delivery Slow?
+
+Run simulation first so participants experience queues, delays, and
+rework before terminology.
+
+Then create a first VSM and introduce queue populations, wait times,
+quality gates, pass rates, and Reject-To paths.
+
+## 11:00-12:00 Flow Math and Quality Economics
+
+Use Quality Gate Calculator, yield math, and throughput math.
+
+Demonstrate First Pass Yield, Rolled Throughput Yield, and defect
+amplification.
+
+## 12:00-13:00 Shift Left Through Collaborative Development
+
+Introduce TDD, pairing, ensemble work, CI, and story slicing.
+
+Teams redesign flow with the constraint of no additional people.
+
+## 13:00-14:00 Lunch
+
+Optional challenge: map a real delivery system.
+
+## 14:00-15:00 AI-Assisted Development
+
+Compare weak/strong prompts and weak/strong requirements.
+
+Analyze pass rates, reject paths, rework, and integration burden.
+
+Discuss AI Whiplash and bottleneck migration.
+
+## 15:00-15:45 Future-State Design
+
+Create current-state and future-state maps optimized for flow,
+predictability, yield, and quality.
+
+Require explicit shift-left changes, AI practices, and quality-gate
+improvements.
+
+## 15:45-16:00 Commitments
+
+Each participant identifies one queue to reduce, one quality gate to
+improve, one feedback loop to shorten, one AI practice to improve, and
+one shift-left practice to adopt.
+
+------------------------------------------------------------------------
+
+# Additional Exercises
+
+## Defect Routing Simulation
+
+Defects physically travel backward through the map so rework is visible
+and tangible.
+
+## Pass-Rate Dice Game
+
+Assign pass probabilities per gate and observe throughput collapse from
+modest defect rates.
+
+## AI Merge Storm Simulation
+
+Round 1: normal development baseline.
+
+Round 2: AI triples code production and participants observe merge,
+review, and integration strain.
+
+Round 3: apply trunk-friendly integration, smaller slices, better
+prompts, CI, and TDD, then recalculate throughput.
+
+------------------------------------------------------------------------
+
+# References to Weave Through Delivery
+
+-   Tim Ottinger / Agile Otter
+-   Industrial Logic
+-   Continuous Delivery (Humble and Farley)
+-   Adam Tornhill ("Why Merge Conflicts Became the New Bottleneck")
+-   Faros AI Whiplash report
 
 ------------------------------------------------------------------------
 
@@ -449,13 +637,16 @@ They must:
 
 # Final Message
 
-The workshop is about understanding systems.
+Delivery performance is governed primarily by:
 
-Not drawing diagrams.
+-   Knowledge quality
+-   Feedback quality
+-   Rework topology
+-   Collaboration structure
+-   Integration capability
+-   Quality gates
 
-Not following Agile rituals.
-
-Not increasing utilization.
+Not typing speed.
 
 Participants should leave able to explain:
 
@@ -466,3 +657,6 @@ Participants should leave able to explain:
 The VSM is evidence.
 
 The principles explain the evidence.
+
+The purpose of Value Stream Mapping is to make flow visible so systems
+can be improved.

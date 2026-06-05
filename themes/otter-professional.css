@@ -63,6 +63,25 @@ ul,
 ol {
   margin-top: 0.35em;
 }
+section table {
+  display: table;
+  width: -moz-max-content;
+  width: max-content;
+  max-width: 92%;
+  margin: 0.75em auto;
+}
+
+section table + p,
+section table + ul,
+section table + ol {
+  margin-top: 0.75em;
+}
+
+section p + table,
+section ul + table,
+section ol + table {
+  margin-top: 0.75em;
+}
 
 li {
   margin: 0.28em 0;

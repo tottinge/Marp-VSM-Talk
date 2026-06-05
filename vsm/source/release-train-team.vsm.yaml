@@ -13,7 +13,7 @@ stages:
     ct: 30m
   - name: Ready for Release
     queue: 40
-    ct: 12h
+    ct: 12.6h
   - name: Deploy
     queue: 1
     ct: 15m

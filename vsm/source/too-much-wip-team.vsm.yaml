@@ -2,8 +2,11 @@ title: Too Much WIP Team
 subtitle: The classic Scrum team with too much started work
 slug: too-much-wip-team
 stages:
+  - name: Ready
+    queue: 120
+    ct: 30m
   - name: Development
-    queue: 18
+    queue: 25
     ct: 1d
   - name: Review
     queue: 12

@@ -88,15 +88,27 @@ footer: "Draft workshop scaffold"
 
 
 ---
-# Scenario sequence
-1. The "Too Much WIP" Team
-2. The Review Bottleneck
-3. The Shift-Right Team
-4. The Dependency Team
-5. The Partial Completion Team
-6. The Merge Hell Team
-7. The Release Train Team
-8. The High-Performance Team
+# Simple outline (today)
+1. Read map signals: queue, CT, WT, and reject paths.
+2. Diagnose common flow failures (Scenarios 1-4).
+3. Diagnose system traps (Scenarios 5-7).
+4. Compare with a high-performance pattern (Scenario 8).
+5. Run a capstone redesign from evidence.
+
+---
+# Scenario generation map
+After DSL edits, run `npm run vsm:generate`.
+- `too-much-wip-team.vsm.yaml` → `too-much-wip-team.svg`
+- `review-bottleneck.vsm.yaml` → `review-bottleneck.svg`
+- `shift-right-team.vsm.yaml` → `shift-right-team.svg`
+- `dependency-team.vsm.yaml` → `dependency-team.svg`
+
+---
+# Scenario generation map (continued)
+- `partial-completion-team.vsm.yaml` → `partial-completion-team.svg`
+- `merge-hell-team.vsm.yaml` → `merge-hell-team.svg`
+- `release-train-team.vsm.yaml` → `release-train-team.svg`
+- `high-performance-team.vsm.yaml` → `high-performance-team.svg`
 
 ---
 <!-- _class: practice -->
