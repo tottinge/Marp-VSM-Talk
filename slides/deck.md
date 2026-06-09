@@ -44,7 +44,7 @@ The design as-is may be wholly comprised of unintended consequences.
 # VSM notation quickstart
 
 
-![w:940](../assets/images/vsm-generated/sample-diagram.svg)
+![w:940](../assets/images/vsm-generated/simple-example.svg)
 
 ---
 

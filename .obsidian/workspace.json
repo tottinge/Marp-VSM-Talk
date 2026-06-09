@@ -200,6 +200,12 @@
   },
   "active": "c090a359156e3e44",
   "lastOpenFiles": [
+    "tests/generate-vsm-svgs.test.mjs",
+    "tests",
+    "assets/images/vsm-generated/simple-example.svg",
+    "vsm/source/simple-example.vsm.yaml",
+    "simple-example.vsm.yaml",
+    "single-item.vsm.yams",
     "assets/images/vsm-generated/single-item.svg",
     "output/deck.pdf",
     "vsm/DSL.md",

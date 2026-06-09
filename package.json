@@ -13,7 +13,8 @@
     "build": "npm run build:html && npm run build:pdf && npm run build:pptx",
     "tidy": "./tidy",
     "check": "marp slides/deck.md --html --allow-local-files -o output/_check.html && node scripts/check-footer-overlap.mjs",
-    "test": "npm run check"
+    "test:unit": "node --test tests/*.test.mjs",
+    "test": "npm run check && npm run test:unit"
   },
   "devDependencies": {
     "@marp-team/marp-cli": "^4.0.0",

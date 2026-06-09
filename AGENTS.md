@@ -46,6 +46,12 @@ When updating workshop materials:
 - For cleanup and formatting, use `./tidy` (not ad-hoc cleanup commands).
 - If dependencies change or new upstream changes are pulled, run `./prepare` to refresh the environment.
 
+## VSM generator non-regression guardrails
+- Preserve stepped lead-time ladder behavior: wait row above work row, with visible vertical separation.
+- For queued stages, do not silently drop wait points/ticks; queues must still render a wait-side ladder step.
+- When `wt` is omitted and `queue` + `ct` are present, keep automatic wait-time derivation enabled.
+- Any edits to `scripts/generate-vsm-svgs.mjs` must keep `tests/generate-vsm-svgs.test.mjs` passing and should add/adjust tests for new ladder behaviors.
+
 ## Upcoming-session focus
 Upcoming sessions should focus on generating VSM graphics and behavior visuals:
 - VSM graphics suitable for Marp embedding.

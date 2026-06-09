@@ -53,6 +53,7 @@ Stage:
 - `wt` (optional): wait time value; if omitted, generator auto-derives from `queue` + `ct`
   - Duration CT form uses `wt = queue × ct` (for example, `queue: 10`, `ct: 0.5d` gives `wt: 5d`)
   - Rate CT form uses `wt = queue ÷ ct` (for example, `queue: 10`, `ct: 2/day` gives `wt: 5d`)
+  - For queued stages, derived/explicit WT remains visible on the wait row of the lead-time ladder (it should not collapse to a single flat work-only line)
 - `quality_gate` (optional): gate details shown in stage box footer
   - `pass_rate`
   - `reject_to`

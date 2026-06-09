@@ -2,7 +2,7 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import process from 'node:process'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { parse as parseYaml } from 'yaml'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -12,6 +12,16 @@ const sourceDir = path.join(repoRoot, 'vsm', 'source')
 const outputDir = path.join(repoRoot, 'assets', 'images', 'vsm-generated')
 
 const extAllowed = new Set(['.yaml', '.yml'])
+
+async function clearGeneratedSvgs(dir) {
+  const entries = await fs.readdir(dir, { withFileTypes: true })
+  const svgFiles = entries.filter(
+    (entry) => entry.isFile() && path.extname(entry.name).toLowerCase() === '.svg'
+  )
+
+  await Promise.all(svgFiles.map((entry) => fs.unlink(path.join(dir, entry.name))))
+  return svgFiles.length
+}
 
 const layout = {
   paddingX: 50,
@@ -27,6 +37,7 @@ const layout = {
   timelineLabelToLineGap: 8,
   timelineWorkTextGap: 14,
   timelineBottomPadding: 20,
+  timelineMinSeparation: 20,
 }
 
 function escapeXml(value) {
@@ -75,6 +86,90 @@ function wrapText(text, maxChars) {
   return lines
 }
 
+const durationUnitAliasMap = new Map([
+  ['m', 'm'],
+  ['min', 'm'],
+  ['mins', 'm'],
+  ['minute', 'm'],
+  ['minutes', 'm'],
+  ['h', 'h'],
+  ['hr', 'h'],
+  ['hrs', 'h'],
+  ['hour', 'h'],
+  ['hours', 'h'],
+  ['d', 'd'],
+  ['day', 'd'],
+  ['days', 'd'],
+  ['w', 'w'],
+  ['wk', 'w'],
+  ['wks', 'w'],
+  ['week', 'w'],
+  ['weeks', 'w'],
+])
+
+function normalizeDurationUnit(rawUnit) {
+  if (!rawUnit) return null
+  return durationUnitAliasMap.get(String(rawUnit).toLowerCase().trim()) ?? null
+}
+
+function parseStrictNumber(value) {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : null
+  }
+  const text = String(value ?? '').trim()
+  if (!text) return null
+  if (!/^[-+]?(?:\d+\.?\d*|\.\d+)$/.test(text)) return null
+  const numeric = Number.parseFloat(text)
+  return Number.isFinite(numeric) ? numeric : null
+}
+
+function parseCtAsDuration(ctRaw) {
+  const text = String(ctRaw ?? '').trim()
+  const match = text.match(/^([-+]?(?:\d+\.?\d*|\.\d+))\s*([a-zA-Z]+)$/)
+  if (!match) return null
+
+  const value = Number.parseFloat(match[1])
+  const unit = normalizeDurationUnit(match[2])
+  if (!Number.isFinite(value) || value < 0 || unit === null) return null
+
+  return { value, unit }
+}
+
+function parseCtAsRate(ctRaw) {
+  const text = String(ctRaw ?? '').trim()
+  const match = text.match(/^([-+]?(?:\d+\.?\d*|\.\d+))\s*(?:\/|per)\s*([a-zA-Z]+)$/i)
+  if (!match) return null
+
+  const value = Number.parseFloat(match[1])
+  const unit = normalizeDurationUnit(match[2])
+  if (!Number.isFinite(value) || value <= 0 || unit === null) return null
+
+  return { value, unit }
+}
+
+function formatMetricNumber(value) {
+  const rounded = Math.round((value + Number.EPSILON) * 100) / 100
+  if (Number.isInteger(rounded)) return String(rounded)
+  return rounded.toFixed(2).replace(/\.?0+$/, '')
+}
+
+export function deriveWaitTime(queueRaw, ctRaw) {
+  const queueValue = parseStrictNumber(queueRaw)
+  if (queueValue === null || queueValue < 0 || ctRaw === undefined || ctRaw === null) return null
+
+  const durationCt = parseCtAsDuration(ctRaw)
+  if (durationCt !== null) {
+    return `${formatMetricNumber(queueValue * durationCt.value)}${durationCt.unit}`
+  }
+
+  const rateCt = parseCtAsRate(ctRaw)
+  if (rateCt !== null) {
+    return `${formatMetricNumber(queueValue / rateCt.value)}${rateCt.unit}`
+  }
+
+  return null
+}
+
 function normalizeStage(stage, index) {
   if (!stage || typeof stage !== 'object') {
     throw new Error(`Stage #${index + 1} is not an object`)
@@ -85,11 +180,13 @@ function normalizeStage(stage, index) {
 
   const qualityGate = stage.quality_gate ?? stage.qualityGate ?? null
   const explicitWt = optionalDisplayText(stage.wt)
+  const computedWt = explicitWt === null ? deriveWaitTime(stage.queue, stage.ct) : null
+  const queue = stage.queue === undefined || stage.queue === null ? null : String(stage.queue)
   return {
     name: String(stage.name),
     ct: String(stage.ct ?? '?'),
-    wt: explicitWt,
-    queue: stage.queue === undefined || stage.queue === null ? null : String(stage.queue),
+    wt: explicitWt ?? computedWt ?? (queue !== null ? '?' : null),
+    queue,
     queueLabel: String(stage.queue_label ?? stage.queueLabel ?? 'Queue'),
     qualityGate:
       qualityGate && typeof qualityGate === 'object'
@@ -101,7 +198,7 @@ function normalizeStage(stage, index) {
   }
 }
 
-function modelFromDsl(dsl, fileBaseName) {
+export function modelFromDsl(dsl, fileBaseName) {
   if (!dsl || typeof dsl !== 'object') {
     throw new Error('Top-level document must be an object')
   }
@@ -117,7 +214,7 @@ function modelFromDsl(dsl, fileBaseName) {
   return { title, subtitle, stages, outputName }
 }
 
-function renderSvg(model, sourceName) {
+export function renderSvg(model, sourceName) {
   const stageWidths = model.stages.map((stage) => {
     const queueArea = stage.queue !== null ? layout.queueWidth + layout.queueGap : 0
     return queueArea + layout.boxWidth
@@ -242,6 +339,12 @@ function renderSvg(model, sourceName) {
   const timelineLevelY = (type) => (type === 'wait' ? restLineY : workLineY)
   const sortedTimelinePoints = [...timelinePoints].sort((left, right) => left.x - right.x)
   if (sortedTimelinePoints.length > 0) {
+    const timelineSeparation = workLineY - restLineY
+    if (timelineSeparation < layout.timelineMinSeparation) {
+      throw new Error(
+        `Timeline Y-level separation too small in ${sourceName}: wait (${restLineY}) and work (${workLineY}) differ by ${timelineSeparation}px; minimum is ${layout.timelineMinSeparation}px`
+      )
+    }
     if (restLineY === workLineY) {
       throw new Error(
         `Timeline Y-levels collapsed in ${sourceName}: wait (${restLineY}) and work (${workLineY}) must differ`
@@ -273,7 +376,13 @@ function renderSvg(model, sourceName) {
     content.push(
       `<path d="${timelinePath}" class="timeline-line" data-wait-y="${restLineY}" data-work-y="${workLineY}"/>`
     )
+    const expectedWaitPointCount = timelineEntries.filter((entry) => entry.waitX !== null).length
     const hasWaitPoints = sortedTimelinePoints.some((point) => point.type === 'wait')
+    if (expectedWaitPointCount > 0 && !hasWaitPoints) {
+      throw new Error(
+        `Timeline wait points missing in ${sourceName}: ${expectedWaitPointCount} queued stage(s) but no wait-time points rendered`
+      )
+    }
     if (hasWaitPoints) {
       content.push(
         `<line x1="${timelineStartX}" y1="${restLineY}" x2="${timelineStartX}" y2="${workLineY}" class="timeline-endcap"/>`
@@ -356,6 +465,7 @@ function renderSvg(model, sourceName) {
 async function main() {
   await fs.mkdir(sourceDir, { recursive: true })
   await fs.mkdir(outputDir, { recursive: true })
+  const clearedSvgCount = await clearGeneratedSvgs(outputDir)
 
   const entries = await fs.readdir(sourceDir, { withFileTypes: true })
   const sourceFiles = entries
@@ -364,6 +474,9 @@ async function main() {
     .sort()
 
   if (sourceFiles.length === 0) {
+    if (clearedSvgCount > 0) {
+      console.log(`Removed ${clearedSvgCount} stale SVG file(s) from ${outputDir}`)
+    }
     console.log(`No DSL files found in ${sourceDir}`)
     return
   }
@@ -392,9 +505,18 @@ async function main() {
   for (const file of generated) {
     console.log(`- ${file}`)
   }
+  if (clearedSvgCount > 0) {
+    console.log(`Removed ${clearedSvgCount} stale SVG file(s) from ${outputDir}`)
+  }
 }
 
-main().catch((error) => {
-  console.error(error.message)
-  process.exitCode = 1
-})
+const isDirectExecution =
+  process.argv[1] !== undefined &&
+  import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href
+
+if (isDirectExecution) {
+  main().catch((error) => {
+    console.error(error.message)
+    process.exitCode = 1
+  })
+}
