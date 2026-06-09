@@ -23,6 +23,11 @@ const layout = {
   queueHeight: 54,
   queueGap: 28,
   stageGap: 80,
+  timelineTopGap: 26,
+  timelineRowGap: 32,
+  timelineLabelToLineGap: 8,
+  timelineWorkTextGap: 14,
+  timelineBottomPadding: 20,
 }
 
 function escapeXml(value) {
@@ -202,13 +207,18 @@ function renderSvg(model, sourceName) {
 
   const width = layout.paddingX * 2 + flowWidth
   const contentTop = layout.paddingY + layout.titleBlockHeight
-  const height = contentTop + layout.boxHeight + layout.paddingY + 10
   const boxTop = contentTop
   const boxMidY = boxTop + layout.boxHeight / 2
+  const waitRowY = boxTop + layout.boxHeight + layout.timelineTopGap
+  const restLineY = waitRowY + layout.timelineLabelToLineGap
+  const workLineY = restLineY + layout.timelineRowGap
+  const workRowY = workLineY + layout.timelineWorkTextGap
+  const height = workRowY + layout.timelineBottomPadding
 
   let cursorX = layout.paddingX
   let previousBoxEndX = null
   const content = []
+  const timelineEntries = []
 
   for (const stage of model.stages) {
     const stageStartX = cursorX
@@ -219,6 +229,7 @@ function renderSvg(model, sourceName) {
     }
 
     let boxX = stageStartX
+    let queueCenterX = null
     if (stage.queue !== null) {
       const queueTopY = boxTop + (layout.boxHeight - layout.queueHeight) / 2
       const queuePoints = [
@@ -234,6 +245,7 @@ function renderSvg(model, sourceName) {
       content.push(
         `<text x="${stageStartX + layout.queueWidth / 2}" y="${queueTopY + layout.queueHeight - 17}" text-anchor="middle" class="queue-value">${escapeXml(stage.queue)}</text>`
       )
+      queueCenterX = stageStartX + layout.queueWidth / 2
 
       boxX = stageStartX + layout.queueWidth + layout.queueGap
       content.push(
@@ -273,9 +285,85 @@ function renderSvg(model, sourceName) {
         )
       }
     }
+    timelineEntries.push({
+      waitX: queueCenterX,
+      wt: stage.wt,
+      workX: boxX + layout.boxWidth / 2,
+      ct: stage.ct,
+    })
 
     previousBoxEndX = boxX + layout.boxWidth
     cursorX = previousBoxEndX + layout.stageGap
+  }
+
+  const timelineStartX = layout.paddingX + 8
+  const timelineEndX = layout.paddingX + flowWidth - 8
+  const timelinePoints = []
+  for (const entry of timelineEntries) {
+    if (entry.waitX !== null) {
+      timelinePoints.push({ x: entry.waitX, type: 'wait', label: entry.wt })
+    }
+    timelinePoints.push({ x: entry.workX, type: 'work', label: entry.ct })
+  }
+
+  const timelineLevelY = (type) => (type === 'wait' ? restLineY : workLineY)
+  const sortedTimelinePoints = [...timelinePoints].sort((left, right) => left.x - right.x)
+  if (sortedTimelinePoints.length > 0) {
+    if (restLineY === workLineY) {
+      throw new Error(
+        `Timeline Y-levels collapsed in ${sourceName}: wait (${restLineY}) and work (${workLineY}) must differ`
+      )
+    }
+
+    const timelineSegments = sortedTimelinePoints.map((point, index, points) => {
+      const startX = index === 0 ? timelineStartX : (points[index - 1].x + point.x) / 2
+      const endX =
+        index === points.length - 1 ? timelineEndX : (point.x + points[index + 1].x) / 2
+      return {
+        ...point,
+        startX,
+        endX,
+        y: timelineLevelY(point.type),
+      }
+    })
+
+    let timelinePath = `M ${timelineSegments[0].startX} ${timelineSegments[0].y}`
+    for (let i = 0; i < timelineSegments.length; i += 1) {
+      const segment = timelineSegments[i]
+      timelinePath += ` H ${segment.endX}`
+      const nextSegment = timelineSegments[i + 1]
+      if (nextSegment && segment.y !== nextSegment.y) {
+        timelinePath += ` V ${nextSegment.y}`
+      }
+    }
+
+    content.push(
+      `<path d="${timelinePath}" class="timeline-line" data-wait-y="${restLineY}" data-work-y="${workLineY}"/>`
+    )
+    content.push(
+      `<line x1="${timelineStartX}" y1="${restLineY}" x2="${timelineStartX}" y2="${workLineY}" class="timeline-endcap"/>`
+    )
+    content.push(
+      `<line x1="${timelineEndX}" y1="${restLineY}" x2="${timelineEndX}" y2="${workLineY}" class="timeline-endcap"/>`
+    )
+
+    for (const point of sortedTimelinePoints) {
+      if (point.type === 'wait') {
+        content.push(
+          `<line x1="${point.x}" y1="${restLineY}" x2="${point.x}" y2="${waitRowY + 4}" class="timeline-tick"/>`
+        )
+        content.push(
+          `<text x="${point.x}" y="${waitRowY}" text-anchor="middle" class="timeline-wait-text">${escapeXml(point.label)}</text>`
+        )
+      } else {
+        content.push(
+          `<line x1="${point.x}" y1="${workLineY}" x2="${point.x}" y2="${workRowY - 6}" class="timeline-tick"/>`
+        )
+        content.push(
+          `<text x="${point.x}" y="${workRowY}" text-anchor="middle" class="timeline-work-text">${escapeXml(point.label)}</text>`
+        )
+      }
+    }
   }
 
   const subtitleBlock = model.subtitle
@@ -303,6 +391,11 @@ function renderSvg(model, sourceName) {
       .queue-value { font: 700 21px Inter, Avenir Next, Helvetica Neue, Arial, sans-serif; fill: #503e22; }
       .connector { stroke: #8aa8c4; stroke-width: 2.5; }
       .flow-arrow { stroke: #2c6da3; stroke-width: 3; }
+      .timeline-line { fill: none; stroke: #5f7388; stroke-width: 2; stroke-linecap: square; stroke-linejoin: miter; }
+      .timeline-endcap { stroke: #5f7388; stroke-width: 2; }
+      .timeline-tick { stroke: #8da0b4; stroke-width: 1.8; }
+      .timeline-wait-text { font: 600 14px Inter, Avenir Next, Helvetica Neue, Arial, sans-serif; fill: #5f6672; }
+      .timeline-work-text { font: 700 14px Inter, Avenir Next, Helvetica Neue, Arial, sans-serif; fill: #2e5274; }
     </style>
   </defs>
   <rect class="background" x="0" y="0" width="${width}" height="${height}" rx="18"/>

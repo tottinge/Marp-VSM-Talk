@@ -1,0 +1,213 @@
+{
+  "main": {
+    "id": "7223d28e33a810d6",
+    "type": "split",
+    "children": [
+      {
+        "id": "530c6e90425d67ff",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "cb8d846756b0b798",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "vsm/DSL.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "DSL"
+            }
+          },
+          {
+            "id": "c090a359156e3e44",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "vsm/DSL.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "DSL"
+            }
+          }
+        ],
+        "currentTab": 1
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "cc768b4d7d075ce9",
+    "type": "split",
+    "children": [
+      {
+        "id": "fef0a1a570367392",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "5071dd692fbcec7b",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "c2a48e1c1cc05291",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "8106f0e3f344667b",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "51d58754433756a6",
+    "type": "split",
+    "children": [
+      {
+        "id": "8e64b5a1875b5014",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "517a5584a90bf34c",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "vsm/DSL.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for DSL"
+            }
+          },
+          {
+            "id": "93023dbb19e71e91",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "vsm/DSL.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from DSL"
+            }
+          },
+          {
+            "id": "41cf4d4de1d98475",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "af107b9f9f30adde",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "28c6ff68c5f46260",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "vsm/DSL.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of DSL"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "c090a359156e3e44",
+  "lastOpenFiles": [
+    "slides/deck.md",
+    "assets/images/vsm-generated/dependency-team.svg",
+    "assets/images/placeholder-02.svg",
+    "assets/images/placeholder-01.svg",
+    "vsm/DSL.md",
+    "Pasted image 20260609115110.png",
+    "Workshop-Principles-Sources.md",
+    "roots.md",
+    "README.md"
+  ]
+}

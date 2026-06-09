@@ -6,7 +6,7 @@
 
 ### Principle
 
-> The purpose of a system is what it does.
+> The purpose of a system is what it does. - Stafford Beer
 
 ### Primary Source
 

@@ -10,20 +10,15 @@ footer: "Draft workshop scaffold"
 <!-- _class: title lead -->
 # Faster and More Predictable
 ## Value Stream Mapping workshop
-### Skill transfer over lecture
-
----
-<!-- _class: workshop -->
-# Workshop contract
-- We learn by diagnosing systems.
-- We avoid blame and recrimination.
-- We optimize for flow, not local utilization.
+### Tim Ottinger
 
 ---
 <!-- _class: workshop -->
 # Outcomes by end of session
-- Read a VSM.
-- Draw a VSM.
+
+- Read a Current State VSM.
+- Draw a Progressing State VSM.
+- Understand Flow Better
 - Diagnose a delivery system.
 - Predict and sketch improvements.
 
@@ -39,15 +34,35 @@ footer: "Draft workshop scaffold"
 ---
 <!-- _class: workshop -->
 # POSIWID lens
-> The purpose of a system is what it does.
+> The purpose of a system is what it does.  - Stafford Beer 
 
-<div class="checkpoint">Prompt: What is this system actually optimized for?</div>
+> Every system is perfectly designed to get the result that it does. - W.E. Deming
+
+The design as-is may be wholly comprised of unintended consequences. 
 
 ---
 # VSM notation quickstart
+
+There are two interesting parts of a VSM (I've left the rest out).
+
+The main part is a series of work "stations" separated by queues. 
+
+The lower part is a time ladder, showing wait times and touch time.
+
+
+
 <div class="takeaway">△ 14 means 14 items waiting in queue.</div>
 <div class="takeaway">Process box: show name + CT + WT.</div>
-<div class="checkpoint">Waiting work is not the same as active progress.</div>
+
+
+---
+# Unintended Consequences
+
+* Late Deliveries
+* Escaped Defects
+* Uncertain Completion Dates
+* Uncertain Completion Status
+* Uncertain Quality
 
 ---
 <!-- _class: split -->
@@ -132,7 +147,6 @@ After DSL edits, run `npm run vsm:generate`.
 - Rework loop: `30%` return to Development.
 - Lesson: Testing isn't the bottleneck. Defects are.
 - Improvement: Move quality practices into development.
-- This is a great Quality Gates Calculator example.
 
 ---
 <!-- _class: practice -->
