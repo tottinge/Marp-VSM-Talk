@@ -27,12 +27,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "vsm/DSL.md",
+                "file": "slides/deck.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "DSL"
+              "title": "deck"
             }
           }
         ],
@@ -109,7 +109,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "vsm/DSL.md",
+                "file": "slides/deck.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -119,7 +119,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for DSL"
+              "title": "Backlinks for deck"
             }
           },
           {
@@ -128,12 +128,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "vsm/DSL.md",
+                "file": "slides/deck.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from DSL"
+              "title": "Outgoing links from deck"
             }
           },
           {
@@ -171,13 +171,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "vsm/DSL.md",
+                "file": "slides/deck.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of DSL"
+              "title": "Outline of deck"
             }
           }
         ]
@@ -200,11 +200,14 @@
   },
   "active": "c090a359156e3e44",
   "lastOpenFiles": [
+    "assets/images/vsm-generated/single-item.svg",
+    "output/deck.pdf",
+    "vsm/DSL.md",
+    "assets/images/vsm-generated/sample-diagram.svg",
     "slides/deck.md",
     "assets/images/vsm-generated/dependency-team.svg",
     "assets/images/placeholder-02.svg",
     "assets/images/placeholder-01.svg",
-    "vsm/DSL.md",
     "Pasted image 20260609115110.png",
     "Workshop-Principles-Sources.md",
     "roots.md",

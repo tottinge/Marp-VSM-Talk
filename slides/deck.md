@@ -43,15 +43,29 @@ The design as-is may be wholly comprised of unintended consequences.
 ---
 # VSM notation quickstart
 
-There are two interesting parts of a VSM (I've left the rest out).
 
-The main part is a series of work "stations" separated by queues. 
+![w:940](../assets/images/vsm-generated/sample-diagram.svg)
 
+---
+
+# Stations
+
+The main flow is a series of work "stations" separated by queues. 
+
+<div style="display: flex;">
+<div style="width: 50%">
+
+![w:220](../assets/images/vsm-generated/single-item.svg)
+
+</div>
+<div style="width: 50%;">
+* CT = Average cycle time for the station
+
+</div>
+</div>
 The lower part is a time ladder, showing wait times and touch time.
 
 
-
-<div class="takeaway">△ 14 means 14 items waiting in queue.</div>
 <div class="takeaway">Process box: show name + CT + WT.</div>
 
 

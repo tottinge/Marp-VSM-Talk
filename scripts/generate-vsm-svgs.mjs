@@ -16,7 +16,6 @@ const extAllowed = new Set(['.yaml', '.yml'])
 const layout = {
   paddingX: 50,
   paddingY: 44,
-  titleBlockHeight: 82,
   boxWidth: 230,
   boxHeight: 136,
   queueWidth: 64,
@@ -47,6 +46,12 @@ function slugify(value) {
     .replaceAll(/^-+|-+$/g, '')
 }
 
+function optionalDisplayText(value) {
+  if (value === undefined || value === null) return null
+  const text = String(value).trim()
+  return text === '' ? null : text
+}
+
 function wrapText(text, maxChars) {
   const words = String(text ?? '')
     .trim()
@@ -69,89 +74,6 @@ function wrapText(text, maxChars) {
   if (current) lines.push(current)
   return lines
 }
-const durationUnitAliasMap = new Map([
-  ['m', 'm'],
-  ['min', 'm'],
-  ['mins', 'm'],
-  ['minute', 'm'],
-  ['minutes', 'm'],
-  ['h', 'h'],
-  ['hr', 'h'],
-  ['hrs', 'h'],
-  ['hour', 'h'],
-  ['hours', 'h'],
-  ['d', 'd'],
-  ['day', 'd'],
-  ['days', 'd'],
-  ['w', 'w'],
-  ['wk', 'w'],
-  ['wks', 'w'],
-  ['week', 'w'],
-  ['weeks', 'w'],
-])
-
-function normalizeDurationUnit(rawUnit) {
-  if (!rawUnit) return null
-  return durationUnitAliasMap.get(String(rawUnit).toLowerCase().trim()) ?? null
-}
-
-function parseStrictNumber(value) {
-  if (typeof value === 'number') {
-    return Number.isFinite(value) ? value : null
-  }
-  const text = String(value ?? '').trim()
-  if (!text) return null
-  if (!/^[-+]?(?:\d+\.?\d*|\.\d+)$/.test(text)) return null
-  const numeric = Number.parseFloat(text)
-  return Number.isFinite(numeric) ? numeric : null
-}
-
-function parseCtAsDuration(ctRaw) {
-  const text = String(ctRaw ?? '').trim()
-  const match = text.match(/^([-+]?(?:\d+\.?\d*|\.\d+))\s*([a-zA-Z]+)$/)
-  if (!match) return null
-
-  const value = Number.parseFloat(match[1])
-  const unit = normalizeDurationUnit(match[2])
-  if (!Number.isFinite(value) || value < 0 || unit === null) return null
-
-  return { value, unit }
-}
-
-function parseCtAsRate(ctRaw) {
-  const text = String(ctRaw ?? '').trim()
-  const match = text.match(/^([-+]?(?:\d+\.?\d*|\.\d+))\s*(?:\/|per)\s*([a-zA-Z]+)$/i)
-  if (!match) return null
-
-  const value = Number.parseFloat(match[1])
-  const unit = normalizeDurationUnit(match[2])
-  if (!Number.isFinite(value) || value <= 0 || unit === null) return null
-
-  return { value, unit }
-}
-
-function formatMetricNumber(value) {
-  const rounded = Math.round((value + Number.EPSILON) * 100) / 100
-  if (Number.isInteger(rounded)) return String(rounded)
-  return rounded.toFixed(2).replace(/\.?0+$/, '')
-}
-
-function deriveWaitTime(queueRaw, ctRaw) {
-  const queueValue = parseStrictNumber(queueRaw)
-  if (queueValue === null || queueValue < 0 || ctRaw === undefined || ctRaw === null) return null
-
-  const durationCt = parseCtAsDuration(ctRaw)
-  if (durationCt !== null) {
-    return `${formatMetricNumber(queueValue * durationCt.value)}${durationCt.unit}`
-  }
-
-  const rateCt = parseCtAsRate(ctRaw)
-  if (rateCt !== null) {
-    return `${formatMetricNumber(queueValue / rateCt.value)}${rateCt.unit}`
-  }
-
-  return null
-}
 
 function normalizeStage(stage, index) {
   if (!stage || typeof stage !== 'object') {
@@ -162,12 +84,11 @@ function normalizeStage(stage, index) {
   }
 
   const qualityGate = stage.quality_gate ?? stage.qualityGate ?? null
-  const explicitWt = stage.wt === undefined || stage.wt === null ? null : String(stage.wt).trim()
-  const computedWt = explicitWt === null || explicitWt === '' ? deriveWaitTime(stage.queue, stage.ct) : null
+  const explicitWt = optionalDisplayText(stage.wt)
   return {
     name: String(stage.name),
     ct: String(stage.ct ?? '?'),
-    wt: explicitWt && explicitWt !== '' ? explicitWt : computedWt ?? '?',
+    wt: explicitWt,
     queue: stage.queue === undefined || stage.queue === null ? null : String(stage.queue),
     queueLabel: String(stage.queue_label ?? stage.queueLabel ?? 'Queue'),
     qualityGate:
@@ -189,8 +110,8 @@ function modelFromDsl(dsl, fileBaseName) {
   }
 
   const stages = dsl.stages.map(normalizeStage)
-  const title = String(dsl.title ?? fileBaseName)
-  const subtitle = dsl.subtitle ? String(dsl.subtitle) : null
+  const title = optionalDisplayText(dsl.title)
+  const subtitle = optionalDisplayText(dsl.subtitle)
   const outputName = `${slugify(dsl.output ?? dsl.slug ?? fileBaseName) || fileBaseName}.svg`
 
   return { title, subtitle, stages, outputName }
@@ -204,9 +125,15 @@ function renderSvg(model, sourceName) {
 
   const flowWidth =
     stageWidths.reduce((sum, width) => sum + width, 0) + layout.stageGap * (model.stages.length - 1)
+  const hasTitle = model.title !== null
+  const hasSubtitle = model.subtitle !== null
+  const titleBaselineY = layout.paddingY
+  const subtitleBaselineY = hasTitle ? layout.paddingY + 54 : layout.paddingY + 22
+  const titleBlockHeight =
+    (hasTitle ? 46 : 0) + (hasSubtitle ? (hasTitle ? 36 : 30) : 0)
 
   const width = layout.paddingX * 2 + flowWidth
-  const contentTop = layout.paddingY + layout.titleBlockHeight
+  const contentTop = layout.paddingY + titleBlockHeight
   const boxTop = contentTop
   const boxMidY = boxTop + layout.boxHeight / 2
   const waitRowY = boxTop + layout.boxHeight + layout.timelineTopGap
@@ -266,22 +193,28 @@ function renderSvg(model, sourceName) {
       textY += 22
     }
 
+    let metricY = boxTop + 82
     content.push(
-      `<text x="${boxX + 18}" y="${boxTop + 82}" class="metric-text">CT: ${escapeXml(stage.ct)}</text>`
+      `<text x="${boxX + 18}" y="${metricY}" class="metric-text">CT: ${escapeXml(stage.ct)}</text>`
     )
-    content.push(
-      `<text x="${boxX + 18}" y="${boxTop + 104}" class="metric-text">WT: ${escapeXml(stage.wt)}</text>`
-    )
+    metricY += 22
+    if (stage.wt !== null) {
+      content.push(
+        `<text x="${boxX + 18}" y="${metricY}" class="metric-text">WT: ${escapeXml(stage.wt)}</text>`
+      )
+      metricY += 22
+    }
 
     if (stage.qualityGate?.passRate || stage.qualityGate?.rejectTo) {
+      const gateY = metricY
       if (stage.qualityGate.passRate) {
         content.push(
-          `<text x="${boxX + 18}" y="${boxTop + 126}" class="gate-text">Pass: ${escapeXml(stage.qualityGate.passRate)}</text>`
+          `<text x="${boxX + 18}" y="${gateY}" class="gate-text">Pass: ${escapeXml(stage.qualityGate.passRate)}</text>`
         )
       }
       if (stage.qualityGate.rejectTo) {
         content.push(
-          `<text x="${boxX + layout.boxWidth - 18}" y="${boxTop + 126}" text-anchor="end" class="gate-text">Reject → ${escapeXml(stage.qualityGate.rejectTo)}</text>`
+          `<text x="${boxX + layout.boxWidth - 18}" y="${gateY}" text-anchor="end" class="gate-text">Reject → ${escapeXml(stage.qualityGate.rejectTo)}</text>`
         )
       }
     }
@@ -300,7 +233,7 @@ function renderSvg(model, sourceName) {
   const timelineEndX = layout.paddingX + flowWidth - 8
   const timelinePoints = []
   for (const entry of timelineEntries) {
-    if (entry.waitX !== null) {
+    if (entry.waitX !== null && entry.wt !== null) {
       timelinePoints.push({ x: entry.waitX, type: 'wait', label: entry.wt })
     }
     timelinePoints.push({ x: entry.workX, type: 'work', label: entry.ct })
@@ -340,12 +273,22 @@ function renderSvg(model, sourceName) {
     content.push(
       `<path d="${timelinePath}" class="timeline-line" data-wait-y="${restLineY}" data-work-y="${workLineY}"/>`
     )
-    content.push(
-      `<line x1="${timelineStartX}" y1="${restLineY}" x2="${timelineStartX}" y2="${workLineY}" class="timeline-endcap"/>`
-    )
-    content.push(
-      `<line x1="${timelineEndX}" y1="${restLineY}" x2="${timelineEndX}" y2="${workLineY}" class="timeline-endcap"/>`
-    )
+    const hasWaitPoints = sortedTimelinePoints.some((point) => point.type === 'wait')
+    if (hasWaitPoints) {
+      content.push(
+        `<line x1="${timelineStartX}" y1="${restLineY}" x2="${timelineStartX}" y2="${workLineY}" class="timeline-endcap"/>`
+      )
+      content.push(
+        `<line x1="${timelineEndX}" y1="${restLineY}" x2="${timelineEndX}" y2="${workLineY}" class="timeline-endcap"/>`
+      )
+    } else {
+      content.push(
+        `<line x1="${timelineStartX}" y1="${workLineY - 5}" x2="${timelineStartX}" y2="${workLineY + 5}" class="timeline-endcap"/>`
+      )
+      content.push(
+        `<line x1="${timelineEndX}" y1="${workLineY - 5}" x2="${timelineEndX}" y2="${workLineY + 5}" class="timeline-endcap"/>`
+      )
+    }
 
     for (const point of sortedTimelinePoints) {
       if (point.type === 'wait') {
@@ -366,13 +309,17 @@ function renderSvg(model, sourceName) {
     }
   }
 
-  const subtitleBlock = model.subtitle
-    ? `<text x="${layout.paddingX}" y="${layout.paddingY + 54}" class="subtitle-text">${escapeXml(model.subtitle)}</text>`
+  const titleBlock = model.title
+    ? `<text x="${layout.paddingX}" y="${titleBaselineY}" class="title-text">${escapeXml(model.title)}</text>`
     : ''
+  const subtitleBlock = model.subtitle
+    ? `<text x="${layout.paddingX}" y="${subtitleBaselineY}" class="subtitle-text">${escapeXml(model.subtitle)}</text>`
+    : ''
+  const svgTitle = model.title ?? 'Value stream map'
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-labelledby="title desc">
-  <title id="title">${escapeXml(model.title)}</title>
+  <title id="title">${escapeXml(svgTitle)}</title>
   <desc id="desc">Generated from ${escapeXml(sourceName)} by scripts/generate-vsm-svgs.mjs</desc>
   <defs>
     <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="8" refY="3.5" orient="auto">
@@ -399,7 +346,7 @@ function renderSvg(model, sourceName) {
     </style>
   </defs>
   <rect class="background" x="0" y="0" width="${width}" height="${height}" rx="18"/>
-  <text x="${layout.paddingX}" y="${layout.paddingY}" class="title-text">${escapeXml(model.title)}</text>
+  ${titleBlock}
   ${subtitleBlock}
   ${content.join('\n  ')}
 </svg>
