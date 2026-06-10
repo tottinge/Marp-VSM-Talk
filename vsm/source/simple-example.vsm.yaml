@@ -1,0 +1,11 @@
+slug: simple-example
+stages:
+  - name: Stage A
+    queue: 1
+    ct: 2hr
+  - name: Stage B
+    queue: 1
+    ct: 5hr
+  - name: Stage C
+    ct: 1 hr
+    queue: 1

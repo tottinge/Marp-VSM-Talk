@@ -1,0 +1,5 @@
+slug: single-item
+stages:
+  - name: Stage A
+    queue: 0
+    ct: 2d

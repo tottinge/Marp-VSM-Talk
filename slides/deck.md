@@ -1,10 +1,11 @@
 ---
 marp: true
+math: katex
 theme: otter-professional
 paginate: true
 size: 16:9
-header: '<img class="topbar-logo" src="../AgileOtter-Logo-Small.jpg" alt="Agile Otter logo" /><span class="topbar-text">Tim Ottinger · Agile Otter</span><img class="topbar-qr" src="../assets/images/agile-otter-qr.svg" alt="Agile Otter QR code" />'
-footer: "Draft workshop scaffold"
+header: <img class="topbar-logo" src="../AgileOtter-Logo-Small.jpg" alt="Agile Otter logo" /><span class="topbar-text">Tim Ottinger · Agile Otter</span><img class="topbar-qr" src="../assets/images/agile-otter-qr.svg" alt="Agile Otter QR code" />
+footer: Draft workshop scaffold
 ---
 
 <!-- _class: title lead -->
@@ -33,14 +34,7 @@ footer: "Draft workshop scaffold"
 
 ---
 <!-- _class: workshop -->
-# POSIWID lens
-> The purpose of a system is what it does.  - Stafford Beer 
 
-> Every system is perfectly designed to get the result that it does. - W.E. Deming
-
-The design as-is may be wholly comprised of unintended consequences. 
-
----
 # VSM notation quickstart
 
 
@@ -48,9 +42,21 @@ The design as-is may be wholly comprised of unintended consequences.
 
 ---
 
+# Not Just Process Flow
+
+There are some processes where they only show the steps used to produce a product in their system.
+
+This might be minimally useful, but only as documentation.
+
+![w:940](../assets/images/not-a-vsm.png)
+
+We will explore more deeply...
+
+---
 # Stations
 
-The main flow is a series of work "stations" separated by queues. 
+The main flow is a series of work "stations" separated by queues.  Queues are important to understanding the flow of work.
+
 
 <div style="display: flex;">
 <div style="width: 50%">
@@ -59,18 +65,75 @@ The main flow is a series of work "stations" separated by queues.
 
 </div>
 <div style="width: 50%;">
-* CT = Average cycle time for the station
+CT = Average cycle time
 
+Other measures will be provided later.
 </div>
 </div>
-The lower part is a time ladder, showing wait times and touch time.
+
+---
+# Connectedness
+
+Every handoff is a queue, represented with a triangle.
+
+Inside the triangle is the queue's population.
+
+If we assume that each stage has 100 availability
+
+$$
+WT = queued \times cycle time.
+$$
+![w:940](../assets/images/vsm-generated/simple-example.svg)
 
 
-<div class="takeaway">Process box: show name + CT + WT.</div>
+---
+
+# Lead Time Ladder
+
+![w:940](../assets/images/vsm-generated/simple-example.svg)
+
+The raised part of the lead time ladder is wait time, and the lowered part is work time 
+
+---
+# Uses
+
+1. To show the current state
+2. To tweak the efficiency (work time / total time)
+3. Build a map of the next desired change
+
+For software orgs, efficiency is often less than 10%. 
+
+---
+
+# Process Efficiency
+
+Consider one item travelling through the queue. 
+
+How often and how long does the work wait?
+
+$$
+Efficiency = \frac{T(work)}{T(total)}
+$$
+
+The more time work is waiting in queues, the less efficient the VSM shows it to be.
+
+---
+
+# Typical Inefficiencies
+
+The "ideal" time for a given process is the sum of the cycle times. If there was no delay at all, this would be the time to delivery. 
+
+Work can wait for:
+* Integration (if task are dependent and partial)
+* Batching (if the release is partial)
+* Busy or Unavailable queue readers
+
 
 
 ---
 # Unintended Consequences
+
+We must be aware of queuing and efficiency. Some consequences of ignoring the process are:
 
 * Late Deliveries
 * Escaped Defects
@@ -89,6 +152,15 @@ The lower part is a time ladder, showing wait times and touch time.
 - Inventory creates delay.
 - Rework creates loops.
 - First-time-through drives flow.
+
+---
+# POSIWID lens
+
+> The purpose of a system is what it does.  - Stafford Beer \
+> Every system is perfectly designed to get the result that it does. - W.E. Deming
+
+The design as-is may be wholly comprised of unintended consequences. 
+
 
 ---
 <!-- _class: workshop -->
