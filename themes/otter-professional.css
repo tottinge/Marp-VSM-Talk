@@ -59,6 +59,16 @@ li {
   color: var(--otter-ink-soft);
 }
 
+section p,
+section li,
+section blockquote,
+section table,
+section .takeaway,
+section .checkpoint,
+section .caption {
+  font-size: 0.88em;
+}
+
 ul,
 ol {
   margin-top: 0.35em;
@@ -215,9 +225,9 @@ section img {
   margin: 0 auto;
   border-radius: 16px;
   object-fit: contain;
-  border: 2px solid rgba(255, 255, 255, 0.92);
-  background: rgba(255, 255, 255, 0.6);
-  box-shadow: 0 20px 48px rgba(15, 23, 42, 0.16);
+  border: 2px solid transparent;
+  background: transparent;
+  box-shadow: none;
 }
 
 .caption {

@@ -17,8 +17,7 @@ footer: Draft workshop scaffold
 <!-- _class: workshop -->
 # Outcomes by end of session
 
-- Read a Current State VSM.
-- Draw a Progressing State VSM.
+- Create and Read a Current State VSM.
 - Use Custom Quality Gate Extensions
 - Understand Flow Better
 - Diagnose a delivery system.
@@ -32,6 +31,56 @@ footer: Draft workshop scaffold
 - Prediction
 - Reveal
 - Theory
+
+
+---
+
+Value
+---
+What is it that the customer requires, desires, and pays for?
+
+Begin with the value in mind (not your current process).
+
+What (strictly) must happen to produce that?
+
+
+![w:200](../assets/images/gold-bar.png)
+
+---
+
+# Value-Adding Steps
+
+A value-adding step **materially** increases the value delivered to the user.
+
+Reports may require 
+- gathering data from various sources, 
+- transforming, enriching, and querying it, 
+- formatting an extract, 
+- and delivering it.
+
+---
+
+# Non-Value-Adding Steps
+
+Some steps may not add value materially but help ensure that we produce value efficiently or effectively.  We may call these ***hygenic*** steps.
+- Metrics gathering and analysis
+- Observability and monitoring
+- Quality Control
+- Good management
+- Human Factors (breaks, lunches, enablement)
+
+---
+# Pure Waste
+
+- **D**efects - Failing to meet customer needs
+- **O**ver Producing - Making what isn't needed (yet)
+- **W**aiting - Idle time due to queues, bottlenecks, supply delays, or approvals
+- **N**on-use of human abilities - wasting human capability and ingenuity
+- **T**ransportation - moving material (including tickets)
+- **I**nventory - stockpiling unfinished work or unneeded finished products 
+- **M**otion - excess effort by people are machines 
+- **E**xtra processing - Doing more than is valued by the recipient ("gold plating")
+
 
 ---
 <!-- _class: workshop -->
