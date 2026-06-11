@@ -19,6 +19,7 @@ footer: Draft workshop scaffold
 
 - Read a Current State VSM.
 - Draw a Progressing State VSM.
+- Use Custom Quality Gate Extensions
 - Understand Flow Better
 - Diagnose a delivery system.
 - Predict and sketch improvements.
@@ -41,7 +42,7 @@ footer: Draft workshop scaffold
 ![w:940](../assets/images/vsm-generated/simple-example.svg)
 
 ---
-
+<!-- _class: workshop -->
 # Not Just Process Flow
 
 There are some processes where they only show the steps used to produce a product in their system.
@@ -53,6 +54,7 @@ This might be minimally useful, but only as documentation.
 We will explore more deeply...
 
 ---
+<!-- _class: workshop -->
 # Stations
 
 The main flow is a series of work "stations" separated by queues.  Queues are important to understanding the flow of work.
@@ -65,9 +67,11 @@ The main flow is a series of work "stations" separated by queues.  Queues are im
 
 </div>
 <div style="width: 50%;">
-CT = Average cycle time
+CT = Median cycle time 
 
-Other measures will be provided later.
+Close enough is close enough for our purposes
+
+Mean is okay, too.
 </div>
 </div>
 
@@ -77,8 +81,6 @@ Other measures will be provided later.
 Every handoff is a queue, represented with a triangle.
 
 Inside the triangle is the queue's population.
-
-If we assume that each stage has 100 availability
 
 $$
 WT = queued \times cycle time.
@@ -119,6 +121,24 @@ The more time work is waiting in queues, the less efficient the VSM shows it to 
 
 ---
 
+# The PoV Shift
+
+* Wait for 2 days to start, code/debug/test for 2 days
+* Wait 5 hours for review, reviewed for 1/2 hour
+* Wait 1 day for QA test, tested for 2 hours
+* Wait 1 week for release
+
+ **~3** work days processing over **~16**  = **19% efficient**
+
+While all workers were 100% utilized. 
+
+---
+
+# Watch The Baton, Not The Runners
+
+---
+
+
 # Typical Inefficiencies
 
 The "ideal" time for a given process is the sum of the cycle times. If there was no delay at all, this would be the time to delivery. 
@@ -128,15 +148,69 @@ Work can wait for:
 * Batching (if the release is partial)
 * Busy or Unavailable queue readers
 
+---  
+  
+# Availability Magnifies Wait Time  
+  
+When a station is not available full-time, the queue does not move at the raw cycle time.  
+  
+$$  
+Effective\ CT = \frac{Cycle\ Time}{Availability}  
+$$
+$$  
+Wait\ Time = Queue\ Population \times Effective\ CT  
+$$  
+---
 
+# Availability Example
+
+
+<div style="  width: 60%;  margin: 0 auto;  text-align: left;">
+
+Queue = 10 items
+
+CT = 0.5 hr 
+
+Avail = 20%
+
+$Wait = 10 \times 0.5 / 0.2 = 25$
+
+**5 hr effort ⇒ 25 hr delay**
+</div>
 
 ---
+
+# Look this over
+
+
+![w:940](../assets/images/vsm-generated/limited-availability-review-and-test.svg)
+
+If we can **double coding speed**, how much faster can we deliver to production?
+
+---
+
+# Answer: 6% ideally
+
+
+![w:940](../assets/images/vsm-generated/limited-availability-review-and-test.svg)
+
+Coding time is only 12% of the total time. 
+
+---
+# Answer: But, Actually...
+
+![w:940](../assets/images/vsm-generated/doubled-coding-speed-after-10-days.svg)
+
+The next item will take 55 days to travel the queue, due to increased inventory in downstream process steps.
+
+---
+
+
 # Unintended Consequences
 
-We must be aware of queuing and efficiency. Some consequences of ignoring the process are:
+Some consequences of ignoring these factors are:
 
 * Late Deliveries
-* Escaped Defects
 * Uncertain Completion Dates
 * Uncertain Completion Status
 * Uncertain Quality
@@ -166,7 +240,7 @@ The design as-is may be wholly comprised of unintended consequences.
 <!-- _class: workshop -->
 # Diagnostic question set
 - Where is work waiting?
-- Where are gathers?
+- Where are scatters and gathers?
 - What is the current constraint?
 - What causes rework?
 - Is this system optimized to start work or finish work?
@@ -196,25 +270,11 @@ The design as-is may be wholly comprised of unintended consequences.
 4. Compare with a high-performance pattern (Scenario 8).
 5. Run a capstone redesign from evidence.
 
----
-# Scenario generation map
-After DSL edits, run `npm run vsm:generate`.
-- `too-much-wip-team.vsm.yaml` → `too-much-wip-team.svg`
-- `review-bottleneck.vsm.yaml` → `review-bottleneck.svg`
-- `shift-right-team.vsm.yaml` → `shift-right-team.svg`
-- `dependency-team.vsm.yaml` → `dependency-team.svg`
-
----
-# Scenario generation map (continued)
-- `partial-completion-team.vsm.yaml` → `partial-completion-team.svg`
-- `merge-hell-team.vsm.yaml` → `merge-hell-team.svg`
-- `release-train-team.vsm.yaml` → `release-train-team.svg`
-- `high-performance-team.vsm.yaml` → `high-performance-team.svg`
 
 ---
 <!-- _class: practice -->
 # Scenario 1 — The "Too Much WIP" Team
-![w:940](../assets/images/vsm-generated/too-much-wip-team.svg)
+![w:900](../assets/images/vsm-generated/too-much-wip-team.svg)
 - Backlog `△ 120`, Ready `△ 25`
 - Lesson: Work isn't moving slowly. Too much work is started.
 - Improvement: Reduce WIP.
@@ -229,7 +289,7 @@ After DSL edits, run `npm run vsm:generate`.
 ---
 <!-- _class: practice -->
 # Scenario 3 — The Shift-Right Team
-![w:940](../assets/images/vsm-generated/shift-right-team.svg)
+![w:840](../assets/images/vsm-generated/shift-right-team.svg)
 - Rework loop: `30%` return to Development.
 - Lesson: Testing isn't the bottleneck. Defects are.
 - Improvement: Move quality practices into development.

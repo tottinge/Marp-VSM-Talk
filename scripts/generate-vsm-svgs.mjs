@@ -36,7 +36,9 @@ const layout = {
   timelineRowGap: 32,
   timelineLabelToLineGap: 8,
   timelineWorkTextGap: 14,
-  timelineBottomPadding: 20,
+  overallMetricsTopGap: 28,
+  overallMetricsRowGap: 22,
+  overallMetricsBottomPadding: 16,
   timelineMinSeparation: 20,
 }
 
@@ -61,6 +63,14 @@ function optionalDisplayText(value) {
   if (value === undefined || value === null) return null
   const text = String(value).trim()
   return text === '' ? null : text
+}
+function resolveSourceSlug(dsl, fileBaseName) {
+  if (!dsl || typeof dsl !== 'object') return fileBaseName
+  const explicitSlug = optionalDisplayText(dsl.slug ?? dsl.output)
+  return explicitSlug ?? fileBaseName
+}
+function formatScopedFileError(fileName, slugName, message) {
+  return `[file: ${fileName}] [slug: ${slugName}] ${message}`
 }
 
 function wrapText(text, maxChars) {
@@ -107,9 +117,20 @@ const durationUnitAliasMap = new Map([
   ['weeks', 'w'],
 ])
 
+const durationUnitToDaysMap = new Map([
+  ['m', 1 / 1440],
+  ['h', 1 / 24],
+  ['d', 1],
+  ['w', 7],
+])
+
 function normalizeDurationUnit(rawUnit) {
   if (!rawUnit) return null
   return durationUnitAliasMap.get(String(rawUnit).toLowerCase().trim()) ?? null
+}
+
+function durationUnitToDays(unit) {
+  return durationUnitToDaysMap.get(unit) ?? null
 }
 
 function parseStrictNumber(value) {
@@ -153,21 +174,102 @@ function formatMetricNumber(value) {
   return rounded.toFixed(2).replace(/\.?0+$/, '')
 }
 
-export function deriveWaitTime(queueRaw, ctRaw) {
-  const queueValue = parseStrictNumber(queueRaw)
-  if (queueValue === null || queueValue < 0 || ctRaw === undefined || ctRaw === null) return null
+function parseFraction(value, { allowZero = false } = {}) {
+  if (value === undefined || value === null) return null
 
-  const durationCt = parseCtAsDuration(ctRaw)
-  if (durationCt !== null) {
-    return `${formatMetricNumber(queueValue * durationCt.value)}${durationCt.unit}`
+  if (typeof value === 'string') {
+    const text = value.trim()
+    if (!text) return null
+
+    if (text.endsWith('%')) {
+      const pct = parseStrictNumber(text.slice(0, -1))
+      if (pct === null || pct < 0 || pct > 100) return null
+      if (!allowZero && pct === 0) return null
+      return pct / 100
+    }
+
+    const numeric = parseStrictNumber(text)
+    if (numeric === null || numeric < 0) return null
+    if (!allowZero && numeric === 0) return null
+    if (numeric <= 1) return numeric
+    if (numeric <= 100) return numeric / 100
+    return null
   }
 
-  const rateCt = parseCtAsRate(ctRaw)
-  if (rateCt !== null) {
-    return `${formatMetricNumber(queueValue / rateCt.value)}${rateCt.unit}`
-  }
-
+  const numeric = parseStrictNumber(value)
+  if (numeric === null || numeric < 0) return null
+  if (!allowZero && numeric === 0) return null
+  if (numeric <= 1) return numeric
+  if (numeric <= 100) return numeric / 100
   return null
+}
+
+function parseAvailabilityFraction(value) {
+  return parseFraction(value, { allowZero: false })
+}
+
+function parsePassRateFraction(value) {
+  return parseFraction(value, { allowZero: true })
+}
+
+function formatAvailabilityPercent(value) {
+  if (!Number.isFinite(value) || value <= 0) return null
+  return `${formatMetricNumber(value * 100)}%`
+}
+
+function formatPercentCompact(value) {
+  if (!Number.isFinite(value) || value < 0) return null
+  return `${formatMetricNumber(value * 100)}%`
+}
+
+function formatPercentFixed(value, digits = 1) {
+  if (!Number.isFinite(value) || value < 0) return null
+  return `${(value * 100).toFixed(digits)}%`
+}
+
+function formatDurationDays(value, fractionDigits) {
+  if (!Number.isFinite(value) || value < 0) return null
+  return `${value.toFixed(fractionDigits)}d`
+}
+
+function parseDurationToDays(raw) {
+  const duration = parseCtAsDuration(raw)
+  if (duration === null) return null
+  const dayFactor = durationUnitToDays(duration.unit)
+  if (dayFactor === null) return null
+  return duration.value * dayFactor
+}
+
+function parseCtToDays(raw) {
+  const durationDays = parseDurationToDays(raw)
+  if (durationDays !== null) return durationDays
+
+  const rate = parseCtAsRate(raw)
+  if (rate === null) return null
+  const dayFactor = durationUnitToDays(rate.unit)
+  if (dayFactor === null || rate.value <= 0) return null
+  return dayFactor / rate.value
+}
+
+function parseQueueValue(raw) {
+  if (raw === undefined || raw === null) return 0
+  const queueValue = parseStrictNumber(raw)
+  if (queueValue === null || queueValue < 0) return null
+  return queueValue
+}
+
+function deriveWaitDays(queueValue, ctDays, availability) {
+  if (!Number.isFinite(queueValue) || queueValue < 0) return null
+  if (!Number.isFinite(ctDays) || ctDays < 0) return null
+  if (!Number.isFinite(availability) || availability <= 0) return null
+  return (queueValue * ctDays) / availability
+}
+
+function parseRejectTo(raw) {
+  if (raw === undefined || raw === null) return null
+  if (typeof raw !== 'string') return null
+  const text = raw.trim()
+  return text === '' ? null : text
 }
 
 function normalizeStage(stage, index) {
@@ -177,24 +279,74 @@ function normalizeStage(stage, index) {
   if (!stage.name) {
     throw new Error(`Stage #${index + 1} is missing required field: name`)
   }
+  if (stage.ct === undefined || stage.ct === null || String(stage.ct).trim() === '') {
+    throw new Error(`Stage #${index + 1} is missing required field: ct`)
+  }
 
   const qualityGate = stage.quality_gate ?? stage.qualityGate ?? null
+  const passRateRaw =
+    stage.pass_rate ??
+    stage.passRate ??
+    (qualityGate && typeof qualityGate === 'object'
+      ? qualityGate.pass_rate ?? qualityGate.passRate ?? null
+      : null)
+  const rejectToRaw =
+    stage.reject_to ??
+    stage.rejectTo ??
+    (qualityGate && typeof qualityGate === 'object'
+      ? qualityGate.reject_to ?? qualityGate.rejectTo ?? null
+      : null)
+
+  const passRate = passRateRaw === null || passRateRaw === undefined ? null : parsePassRateFraction(passRateRaw)
+  if (passRateRaw !== undefined && passRateRaw !== null && passRate === null) {
+    throw new Error(`Stage #${index + 1} has invalid pass_rate value: ${passRateRaw}`)
+  }
+  const rejectTo = rejectToRaw === null || rejectToRaw === undefined ? null : parseRejectTo(rejectToRaw)
+  if (rejectToRaw !== undefined && rejectToRaw !== null && rejectTo === null) {
+    throw new Error(`Stage #${index + 1} has invalid reject_to value: ${rejectToRaw}`)
+  }
+
+  const queueValue = parseQueueValue(stage.queue)
+  if (queueValue === null) {
+    throw new Error(`Stage #${index + 1} has invalid queue value: ${stage.queue}`)
+  }
+
+  const availabilityRaw = stage.availability ?? stage.station_availability ?? stage.stationAvailability
+  const parsedAvailability = parseAvailabilityFraction(availabilityRaw)
+  if (availabilityRaw !== undefined && availabilityRaw !== null && parsedAvailability === null) {
+    throw new Error(`Stage #${index + 1} has invalid availability value: ${availabilityRaw}`)
+  }
+  const availability = parsedAvailability ?? 1
+  const availabilityLabel = formatAvailabilityPercent(availability)
+
+  const ctDays = parseCtToDays(stage.ct)
+  if (ctDays === null || ctDays <= 0) {
+    throw new Error(`Stage #${index + 1} has invalid ct value: ${stage.ct}`)
+  }
+
   const explicitWt = optionalDisplayText(stage.wt)
-  const computedWt = explicitWt === null ? deriveWaitTime(stage.queue, stage.ct) : null
-  const queue = stage.queue === undefined || stage.queue === null ? null : String(stage.queue)
+  const wtDays = explicitWt === null ? deriveWaitDays(queueValue, ctDays, availability) : parseDurationToDays(explicitWt)
+  if (wtDays === null) {
+    throw new Error(`Stage #${index + 1} has invalid wt value: ${stage.wt}`)
+  }
+
+  const ectDays = ctDays / availability
   return {
     name: String(stage.name),
-    ct: String(stage.ct ?? '?'),
-    wt: explicitWt ?? computedWt ?? (queue !== null ? '?' : null),
-    queue,
+    ctDays,
+    ctLabel: formatDurationDays(ctDays, 2),
+    wtDays,
+    wtLabel: formatDurationDays(wtDays, 1),
+    availability,
+    availabilityLabel,
+    ectDays,
+    ectLabel: formatDurationDays(ectDays, 2),
+    queueValue,
+    queue: formatMetricNumber(queueValue),
     queueLabel: String(stage.queue_label ?? stage.queueLabel ?? 'Queue'),
-    qualityGate:
-      qualityGate && typeof qualityGate === 'object'
-        ? {
-            passRate: qualityGate.pass_rate ?? qualityGate.passRate ?? null,
-            rejectTo: qualityGate.reject_to ?? qualityGate.rejectTo ?? null,
-          }
-        : null,
+    passRate,
+    passRateLabel: passRate === null ? null : formatPercentCompact(passRate),
+    rejectTo,
   }
 }
 
@@ -203,15 +355,45 @@ export function modelFromDsl(dsl, fileBaseName) {
     throw new Error('Top-level document must be an object')
   }
   if (!Array.isArray(dsl.stages) || dsl.stages.length === 0) {
-    throw new Error('Top-level field "stages" must be a non-empty array')
+    throw new Error('Top-level field \"stages\" must be a non-empty array')
   }
 
-  const stages = dsl.stages.map(normalizeStage)
   const title = optionalDisplayText(dsl.title)
+  if (title === null) {
+    throw new Error('Top-level field \"title\" is required')
+  }
   const subtitle = optionalDisplayText(dsl.subtitle)
-  const outputName = `${slugify(dsl.output ?? dsl.slug ?? fileBaseName) || fileBaseName}.svg`
+  const stages = dsl.stages.map(normalizeStage)
 
-  return { title, subtitle, stages, outputName }
+  const priorStageNames = new Set()
+  for (const [index, stage] of stages.entries()) {
+    if (priorStageNames.has(stage.name)) {
+      throw new Error(`Stage #${index + 1} has duplicate name: ${stage.name}`)
+    }
+    if (stage.rejectTo !== null && !priorStageNames.has(stage.rejectTo)) {
+      throw new Error(
+        `Stage #${index + 1} reject_to must reference a prior stage name: ${stage.rejectTo}`
+      )
+    }
+    priorStageNames.add(stage.name)
+  }
+
+  const totalCtDays = stages.reduce((sum, stage) => sum + stage.ctDays, 0)
+  const totalLeadDays = stages.reduce((sum, stage) => sum + stage.ctDays + stage.wtDays, 0)
+  const efficiency = totalLeadDays > 0 ? totalCtDays / totalLeadDays : 0
+  const passRates = stages.filter((stage) => stage.passRate !== null).map((stage) => stage.passRate)
+  const overallPassRate =
+    passRates.length === 0 ? null : passRates.reduce((product, passRate) => product * passRate, 1)
+
+  const outputName = `${slugify(dsl.output ?? dsl.slug ?? fileBaseName) || fileBaseName}.svg`
+  return {
+    title,
+    subtitle,
+    stages,
+    outputName,
+    efficiencyLabel: formatPercentFixed(efficiency, 1),
+    overallPassLabel: overallPassRate === null ? null : formatPercentFixed(overallPassRate, 1),
+  }
 }
 
 export function renderSvg(model, sourceName) {
@@ -229,6 +411,15 @@ export function renderSvg(model, sourceName) {
   const titleBlockHeight =
     (hasTitle ? 46 : 0) + (hasSubtitle ? (hasTitle ? 36 : 30) : 0)
 
+  const overallMetricLines = [`Efficiency: ${model.efficiencyLabel}`]
+  if (model.overallPassLabel !== null) {
+    overallMetricLines.push(`Overall Pass: ${model.overallPassLabel}`)
+  }
+  const overallMetricsHeight =
+    layout.overallMetricsTopGap +
+    Math.max(overallMetricLines.length - 1, 0) * layout.overallMetricsRowGap +
+    layout.overallMetricsBottomPadding
+
   const width = layout.paddingX * 2 + flowWidth
   const contentTop = layout.paddingY + titleBlockHeight
   const boxTop = contentTop
@@ -237,7 +428,7 @@ export function renderSvg(model, sourceName) {
   const restLineY = waitRowY + layout.timelineLabelToLineGap
   const workLineY = restLineY + layout.timelineRowGap
   const workRowY = workLineY + layout.timelineWorkTextGap
-  const height = workRowY + layout.timelineBottomPadding
+  const height = workRowY + overallMetricsHeight
 
   let cursorX = layout.paddingX
   let previousBoxEndX = null
@@ -248,7 +439,7 @@ export function renderSvg(model, sourceName) {
     const stageStartX = cursorX
     if (previousBoxEndX !== null) {
       content.push(
-        `<line x1="${previousBoxEndX + 10}" y1="${boxMidY}" x2="${stageStartX - 10}" y2="${boxMidY}" class="flow-arrow" marker-end="url(#arrowhead)"/>`
+        `<line x1=\"${previousBoxEndX + 10}\" y1=\"${boxMidY}\" x2=\"${stageStartX - 10}\" y2=\"${boxMidY}\" class=\"flow-arrow\" marker-end=\"url(#arrowhead)\"/>`
       )
     }
 
@@ -262,64 +453,56 @@ export function renderSvg(model, sourceName) {
         `${stageStartX + layout.queueWidth},${queueTopY + layout.queueHeight}`,
       ].join(' ')
 
-      content.push(`<polygon points="${queuePoints}" class="queue-triangle"/>`)
+      content.push(`<polygon points=\"${queuePoints}\" class=\"queue-triangle\"/>`)
       content.push(
-        `<text x="${stageStartX + layout.queueWidth / 2}" y="${queueTopY - 8}" text-anchor="middle" class="queue-label">${escapeXml(stage.queueLabel)}</text>`
+        `<text x=\"${stageStartX + layout.queueWidth / 2}\" y=\"${queueTopY - 8}\" text-anchor=\"middle\" class=\"queue-label\">${escapeXml(stage.queueLabel)}</text>`
       )
       content.push(
-        `<text x="${stageStartX + layout.queueWidth / 2}" y="${queueTopY + layout.queueHeight - 17}" text-anchor="middle" class="queue-value">${escapeXml(stage.queue)}</text>`
+        `<text x=\"${stageStartX + layout.queueWidth / 2}\" y=\"${queueTopY + layout.queueHeight - 17}\" text-anchor=\"middle\" class=\"queue-value\">${escapeXml(stage.queue)}</text>`
       )
       queueCenterX = stageStartX + layout.queueWidth / 2
 
       boxX = stageStartX + layout.queueWidth + layout.queueGap
       content.push(
-        `<line x1="${stageStartX + layout.queueWidth + 8}" y1="${boxMidY}" x2="${boxX - 8}" y2="${boxMidY}" class="connector"/>`
+        `<line x1=\"${stageStartX + layout.queueWidth + 8}\" y1=\"${boxMidY}\" x2=\"${boxX - 8}\" y2=\"${boxMidY}\" class=\"connector\"/>`
       )
     }
 
     content.push(
-      `<rect x="${boxX}" y="${boxTop}" width="${layout.boxWidth}" height="${layout.boxHeight}" rx="12" class="stage-box"/>`
+      `<rect x=\"${boxX}\" y=\"${boxTop}\" width=\"${layout.boxWidth}\" height=\"${layout.boxHeight}\" rx=\"12\" class=\"stage-box\"/>`
     )
 
     const nameLines = wrapText(stage.name, 18).slice(0, 2)
     let textY = boxTop + 30
     for (const line of nameLines) {
       content.push(
-        `<text x="${boxX + layout.boxWidth / 2}" y="${textY}" text-anchor="middle" class="stage-name">${escapeXml(line)}</text>`
+        `<text x=\"${boxX + layout.boxWidth / 2}\" y=\"${textY}\" text-anchor=\"middle\" class=\"stage-name\">${escapeXml(line)}</text>`
       )
       textY += 22
     }
 
     let metricY = boxTop + 82
     content.push(
-      `<text x="${boxX + 18}" y="${metricY}" class="metric-text">CT: ${escapeXml(stage.ct)}</text>`
+      `<text x=\"${boxX + 18}\" y=\"${metricY}\" class=\"metric-text\">ECT: ${escapeXml(stage.ectLabel)} (${escapeXml(stage.availabilityLabel)})</text>`
     )
     metricY += 22
-    if (stage.wt !== null) {
+    if (stage.passRateLabel !== null) {
       content.push(
-        `<text x="${boxX + 18}" y="${metricY}" class="metric-text">WT: ${escapeXml(stage.wt)}</text>`
+        `<text x=\"${boxX + 18}\" y=\"${metricY}\" class=\"gate-text\">Pass: ${escapeXml(stage.passRateLabel)}</text>`
       )
       metricY += 22
     }
-
-    if (stage.qualityGate?.passRate || stage.qualityGate?.rejectTo) {
-      const gateY = metricY
-      if (stage.qualityGate.passRate) {
-        content.push(
-          `<text x="${boxX + 18}" y="${gateY}" class="gate-text">Pass: ${escapeXml(stage.qualityGate.passRate)}</text>`
-        )
-      }
-      if (stage.qualityGate.rejectTo) {
-        content.push(
-          `<text x="${boxX + layout.boxWidth - 18}" y="${gateY}" text-anchor="end" class="gate-text">Reject → ${escapeXml(stage.qualityGate.rejectTo)}</text>`
-        )
-      }
+    if (stage.rejectTo !== null) {
+      content.push(
+        `<text x=\"${boxX + 18}\" y=\"${metricY}\" class=\"rework-text\">↺ ${escapeXml(stage.rejectTo)}</text>`
+      )
     }
+
     timelineEntries.push({
       waitX: queueCenterX,
-      wt: stage.wt,
+      wt: stage.wtLabel,
       workX: boxX + layout.boxWidth / 2,
-      ct: stage.ct,
+      ct: stage.ctLabel,
     })
 
     previousBoxEndX = boxX + layout.boxWidth
@@ -374,7 +557,7 @@ export function renderSvg(model, sourceName) {
     }
 
     content.push(
-      `<path d="${timelinePath}" class="timeline-line" data-wait-y="${restLineY}" data-work-y="${workLineY}"/>`
+      `<path d=\"${timelinePath}\" class=\"timeline-line\" data-wait-y=\"${restLineY}\" data-work-y=\"${workLineY}\"/>`
     )
     const expectedWaitPointCount = timelineEntries.filter((entry) => entry.waitX !== null).length
     const hasWaitPoints = sortedTimelinePoints.some((point) => point.type === 'wait')
@@ -385,54 +568,61 @@ export function renderSvg(model, sourceName) {
     }
     if (hasWaitPoints) {
       content.push(
-        `<line x1="${timelineStartX}" y1="${restLineY}" x2="${timelineStartX}" y2="${workLineY}" class="timeline-endcap"/>`
+        `<line x1=\"${timelineStartX}\" y1=\"${restLineY}\" x2=\"${timelineStartX}\" y2=\"${workLineY}\" class=\"timeline-endcap\"/>`
       )
       content.push(
-        `<line x1="${timelineEndX}" y1="${restLineY}" x2="${timelineEndX}" y2="${workLineY}" class="timeline-endcap"/>`
+        `<line x1=\"${timelineEndX}\" y1=\"${restLineY}\" x2=\"${timelineEndX}\" y2=\"${workLineY}\" class=\"timeline-endcap\"/>`
       )
     } else {
       content.push(
-        `<line x1="${timelineStartX}" y1="${workLineY - 5}" x2="${timelineStartX}" y2="${workLineY + 5}" class="timeline-endcap"/>`
+        `<line x1=\"${timelineStartX}\" y1=\"${workLineY - 5}\" x2=\"${timelineStartX}\" y2=\"${workLineY + 5}\" class=\"timeline-endcap\"/>`
       )
       content.push(
-        `<line x1="${timelineEndX}" y1="${workLineY - 5}" x2="${timelineEndX}" y2="${workLineY + 5}" class="timeline-endcap"/>`
+        `<line x1=\"${timelineEndX}\" y1=\"${workLineY - 5}\" x2=\"${timelineEndX}\" y2=\"${workLineY + 5}\" class=\"timeline-endcap\"/>`
       )
     }
 
     for (const point of sortedTimelinePoints) {
       if (point.type === 'wait') {
         content.push(
-          `<line x1="${point.x}" y1="${restLineY}" x2="${point.x}" y2="${waitRowY + 4}" class="timeline-tick"/>`
+          `<line x1=\"${point.x}\" y1=\"${restLineY}\" x2=\"${point.x}\" y2=\"${waitRowY + 4}\" class=\"timeline-tick\"/>`
         )
         content.push(
-          `<text x="${point.x}" y="${waitRowY}" text-anchor="middle" class="timeline-wait-text">${escapeXml(point.label)}</text>`
+          `<text x=\"${point.x}\" y=\"${waitRowY}\" text-anchor=\"middle\" class=\"timeline-wait-text\">${escapeXml(point.label)}</text>`
         )
       } else {
         content.push(
-          `<line x1="${point.x}" y1="${workLineY}" x2="${point.x}" y2="${workRowY - 6}" class="timeline-tick"/>`
+          `<line x1=\"${point.x}\" y1=\"${workLineY}\" x2=\"${point.x}\" y2=\"${workRowY - 6}\" class=\"timeline-tick\"/>`
         )
         content.push(
-          `<text x="${point.x}" y="${workRowY}" text-anchor="middle" class="timeline-work-text">${escapeXml(point.label)}</text>`
+          `<text x=\"${point.x}\" y=\"${workRowY}\" text-anchor=\"middle\" class=\"timeline-work-text\">${escapeXml(point.label)}</text>`
         )
       }
     }
   }
 
+  const overallMetricsStartY = workRowY + layout.overallMetricsTopGap
+  for (const [index, metricLine] of overallMetricLines.entries()) {
+    content.push(
+      `<text x=\"${timelineEndX}\" y=\"${overallMetricsStartY + index * layout.overallMetricsRowGap}\" text-anchor=\"end\" class=\"overall-metric-text\">${escapeXml(metricLine)}</text>`
+    )
+  }
+
   const titleBlock = model.title
-    ? `<text x="${layout.paddingX}" y="${titleBaselineY}" class="title-text">${escapeXml(model.title)}</text>`
+    ? `<text x=\"${layout.paddingX}\" y=\"${titleBaselineY}\" class=\"title-text\">${escapeXml(model.title)}</text>`
     : ''
   const subtitleBlock = model.subtitle
-    ? `<text x="${layout.paddingX}" y="${subtitleBaselineY}" class="subtitle-text">${escapeXml(model.subtitle)}</text>`
+    ? `<text x=\"${layout.paddingX}\" y=\"${subtitleBaselineY}\" class=\"subtitle-text\">${escapeXml(model.subtitle)}</text>`
     : ''
   const svgTitle = model.title ?? 'Value stream map'
 
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-labelledby="title desc">
-  <title id="title">${escapeXml(svgTitle)}</title>
-  <desc id="desc">Generated from ${escapeXml(sourceName)} by scripts/generate-vsm-svgs.mjs</desc>
+  return `<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"${width}\" height=\"${height}\" viewBox=\"0 0 ${width} ${height}\" role=\"img\" aria-labelledby=\"title desc\">
+  <title id=\"title\">${escapeXml(svgTitle)}</title>
+  <desc id=\"desc\">Generated from ${escapeXml(sourceName)} by scripts/generate-vsm-svgs.mjs</desc>
   <defs>
-    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="8" refY="3.5" orient="auto">
-      <polygon points="0 0, 10 3.5, 0 7" fill="#2c6da3"/>
+    <marker id=\"arrowhead\" markerWidth=\"10\" markerHeight=\"7\" refX=\"8\" refY=\"3.5\" orient=\"auto\">
+      <polygon points=\"0 0, 10 3.5, 0 7\" fill=\"#2c6da3\"/>
     </marker>
     <style>
       .background { fill: #f7fbff; }
@@ -442,6 +632,7 @@ export function renderSvg(model, sourceName) {
       .stage-name { font: 700 20px Inter, Avenir Next, Helvetica Neue, Arial, sans-serif; fill: #15324f; }
       .metric-text { font: 600 16px Inter, Avenir Next, Helvetica Neue, Arial, sans-serif; fill: #244a6e; }
       .gate-text { font: 600 13px Inter, Avenir Next, Helvetica Neue, Arial, sans-serif; fill: #3e5f7f; }
+      .rework-text { font: 700 14px Inter, Avenir Next, Helvetica Neue, Arial, sans-serif; fill: #8a1f1f; }
       .queue-triangle { fill: #e8f1f9; stroke: #d39a37; stroke-width: 3; }
       .queue-label { font: 600 12px Inter, Avenir Next, Helvetica Neue, Arial, sans-serif; fill: #6a5a40; }
       .queue-value { font: 700 21px Inter, Avenir Next, Helvetica Neue, Arial, sans-serif; fill: #503e22; }
@@ -450,11 +641,12 @@ export function renderSvg(model, sourceName) {
       .timeline-line { fill: none; stroke: #5f7388; stroke-width: 2; stroke-linecap: square; stroke-linejoin: miter; }
       .timeline-endcap { stroke: #5f7388; stroke-width: 2; }
       .timeline-tick { stroke: #8da0b4; stroke-width: 1.8; }
-      .timeline-wait-text { font: 600 14px Inter, Avenir Next, Helvetica Neue, Arial, sans-serif; fill: #5f6672; }
-      .timeline-work-text { font: 700 14px Inter, Avenir Next, Helvetica Neue, Arial, sans-serif; fill: #2e5274; }
+      .timeline-wait-text { font: 700 15px Inter, Avenir Next, Helvetica Neue, Arial, sans-serif; fill: #7a3f18; }
+      .timeline-work-text { font: 500 12px Inter, Avenir Next, Helvetica Neue, Arial, sans-serif; fill: #6e7f90; }
+      .overall-metric-text { font: 700 15px Inter, Avenir Next, Helvetica Neue, Arial, sans-serif; fill: #1f486f; }
     </style>
   </defs>
-  <rect class="background" x="0" y="0" width="${width}" height="${height}" rx="18"/>
+  <rect class=\"background\" x=\"0\" y=\"0\" width=\"${width}\" height=\"${height}\" rx=\"18\"/>
   ${titleBlock}
   ${subtitleBlock}
   ${content.join('\n  ')}
@@ -482,23 +674,24 @@ async function main() {
   }
 
   const generated = []
+  const errors = []
   for (const fileName of sourceFiles) {
     const sourcePath = path.join(sourceDir, fileName)
     const raw = await fs.readFile(sourcePath, 'utf8')
 
-    let dsl
-    try {
-      dsl = parseYaml(raw)
-    } catch (error) {
-      throw new Error(`Failed to parse ${fileName}: ${error.message}`)
-    }
-
     const baseName = fileName.replace(path.extname(fileName), '')
-    const model = modelFromDsl(dsl, baseName)
-    const svg = renderSvg(model, fileName)
-    const outPath = path.join(outputDir, model.outputName)
-    await fs.writeFile(outPath, svg, 'utf8')
-    generated.push(path.relative(repoRoot, outPath))
+    let slugName = baseName
+    try {
+      const dsl = parseYaml(raw)
+      slugName = resolveSourceSlug(dsl, baseName)
+      const model = modelFromDsl(dsl, baseName)
+      const svg = renderSvg(model, fileName)
+      const outPath = path.join(outputDir, model.outputName)
+      await fs.writeFile(outPath, svg, 'utf8')
+      generated.push(path.relative(repoRoot, outPath))
+    } catch (error) {
+      errors.push(formatScopedFileError(fileName, slugName, error.message))
+    }
   }
 
   console.log(`Generated ${generated.length} SVG file(s):`)
@@ -507,6 +700,9 @@ async function main() {
   }
   if (clearedSvgCount > 0) {
     console.log(`Removed ${clearedSvgCount} stale SVG file(s) from ${outputDir}`)
+  }
+  if (errors.length > 0) {
+    throw new Error(`Generation completed with ${errors.length} error(s):\n- ${errors.join('\n- ')}`)
   }
 }
 

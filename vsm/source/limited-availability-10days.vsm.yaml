@@ -1,0 +1,29 @@
+title: Doubled Coding Speed After 10 Days
+subtitle: Faster coding increases queues at review and testing when downstream capacity is unchanged
+slug: doubled-coding-speed-after-10-days
+
+assumptions:
+  developers: 3
+  elapsed_time: 10 working days
+  original_coding_ct: 2.5d
+  doubled_coding_ct: 1.25d
+  starting_review_queue: 6
+  starting_testing_queue: 4
+
+stages:
+  - name: Coding
+    queue: 1
+    ct: 1.25d
+    availability: 100%
+
+  - name: Code Review
+    queue: 18
+    ct: 1h
+    availability: 15%
+    wt: 120h
+
+  - name: Testing
+    queue: 13
+    ct: 1d
+    availability: 33%
+    wt: 39.4d

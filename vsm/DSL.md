@@ -1,74 +1,80 @@
-# VSM DSL v0 (planning + first implementation)
-
-This project uses YAML as a human-readable DSL for value-stream map scenarios.
-
+# VSM DSL
+This project uses YAML as a DSL for value-stream map scenarios.
 ## Directory layout
-
 - Source DSL files: `vsm/source/`
 - Generated SVG output: `assets/images/vsm-generated/`
 - Generator script: `scripts/generate-vsm-svgs.mjs`
-
-Generated SVG files are ignored by git, so they can be regenerated locally.
-
-## Commands
-
+Generated SVG files are ignored by git and should be regenerated locally.
+## Command
 ```bash
 npm run vsm:generate
 ```
-
 ## Basic DSL shape
-
 ```yaml
-title: Healthy Team
-subtitle: Baseline flow snapshot
-slug: healthy-team
+title: Testing Flow
+subtitle: Example snapshot
+slug: testing-flow
 stages:
-  - name: Analysis
-    queue: 9
-    ct: 2d
-    wt: 18d
-  - name: Design
-    queue: 11
+  - name: Coding
+    ct: 1.25d
+    queue: 3
+    availability: 100%
+  - name: Testing
     ct: 1d
-    wt: 11d
+    queue: 13
+    availability: 33%
+    pass_rate: 85%
+    reject_to: Coding
 ```
-
-## Fields
-
-Top-level:
-
-- `title` (optional): chart title
-- `subtitle` (optional): second title line
-- `slug` or `output` (optional): output filename stem
-- `stages` (required): ordered list of process stages
-
-Stage:
-
-- `name` (required): process/station name
-- `queue` (optional): queue count shown in an inventory triangle before the stage
-- `queue_label` (optional): text label above queue triangle (default: `Queue`)
-- `ct` (optional): cycle-time input used for display and wait-time math
-  - Duration form (time per item): `2d`, `4h`, `30m`, `1w`
-  - Rate form (items per time): `2/day`, `3/h`, `10/week`
-- `wt` (optional): wait time value; if omitted, generator auto-derives from `queue` + `ct`
-  - Duration CT form uses `wt = queue × ct` (for example, `queue: 10`, `ct: 0.5d` gives `wt: 5d`)
-  - Rate CT form uses `wt = queue ÷ ct` (for example, `queue: 10`, `ct: 2/day` gives `wt: 5d`)
-  - For queued stages, derived/explicit WT remains visible on the wait row of the lead-time ladder (it should not collapse to a single flat work-only line)
-- `quality_gate` (optional): gate details shown in stage box footer
-  - `pass_rate`
-  - `reject_to`
-
+## Required fields
+- `title` (required): chart title.
+- `stages` (required): ordered non-empty list of stages.
+- `stage.name` (required): stage/station label.
+- `stage.ct` (required): cycle time.
+## Defaults
+- `stage.queue`: defaults to `0`.
+- `stage.availability`: defaults to `100%`.
+- `stage.pass_rate`: omitted by default.
+- `stage.reject_to`: omitted by default.
+- `stage.wt`: calculated when omitted.
+## Stage fields
+- `name`: stage name.
+- `ct`: cycle time input.
+  - Duration form (time per item): `2d`, `4h`, `30m`, `1w`.
+  - Rate form (items per time): `2/day`, `3/h`, `10/week`.
+- `queue`: queue population shown in the queue triangle.
+- `queue_label` (optional): label above queue triangle (default `Queue`).
+- `availability` (optional): station availability.
+  - Fraction form: `0.33`.
+  - Percent form: `33%`.
+- `wt` (optional): explicit wait time duration. If omitted, it is calculated.
+- `pass_rate` (optional): pass percentage/fraction shown as `Pass: ...`.
+- `reject_to` (optional): single destination stage name rendered as `↺ <stage>`.
+## Quality gate rules
+- `pass_rate`: display only when provided.
+- `reject_to`: display only when provided.
+- `reject_to` must reference the name of a prior stage.
+- `reject_to` accepts one destination only.
+## Calculated values
+- `ECT = CT ÷ Availability`
+- `WT = Queue × CT ÷ Availability` (when `wt` is omitted)
+- `Efficiency = Σ(CT) / Σ(CT + WT)`
+- `OverallPassRate = Π(pass_rate)` using only stages that explicitly define `pass_rate`
+If no stage defines `pass_rate`, `Overall Pass` is not rendered.
+## Rendering behavior
+- Stage box content:
+  - Stage name
+  - `ECT: <value> (<availability>)`
+  - Optional `Pass: ...`
+  - Optional `↺ <prior stage>`
+- Lead-time ladder:
+  - Wait row (`WT`) and work row (`CT`) are both rendered.
+  - CT and WT labels are rendered in day units (`d`) for cross-stage comparability.
+  - Overall metrics appear at far right:
+    - `Efficiency: ...`
+    - `Overall Pass: ...` (only when pass rates exist)
 ## Marp linking
-
-After generation, use the SVG directly in slides:
-
+After generation, embed generated SVGs directly in slides:
 ```markdown
-![w:940](../assets/images/vsm-generated/healthy-team.svg)
+![w:940](../assets/images/vsm-generated/testing-flow.svg)
 ```
-
-## Planned extensions (next slices)
-
-- Explicit gather nodes and fan-in/fan-out links
-- Rework loop arrows between arbitrary stages
-- Optional role/ownership overlays (for behavior maps)
-- Theme presets for scenario variants
