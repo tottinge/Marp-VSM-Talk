@@ -62,15 +62,19 @@ Reports may require
 
 # Non-Value-Adding Steps
 
-Some steps may not add value materially but help ensure that we produce value efficiently or effectively.  We may call these ***hygenic*** steps.
+Some steps may not add value materially but help ensure that we produce value efficiently or effectively.  We may call these ***hygenic*** steps. We *don't eliminate these* but make them effective.
+
 - Metrics gathering and analysis
 - Observability and monitoring
 - Quality Control
 - Good management
 - Human Factors (breaks, lunches, enablement)
 
+
 ---
 # Pure Waste
+
+We try to eliminate these entirely if possible.
 
 - **D**efects - Failing to meet customer needs
 - **O**ver Producing - Making what isn't needed (yet)
@@ -84,29 +88,21 @@ Some steps may not add value materially but help ensure that we produce value ef
 
 ---
 <!-- _class: workshop -->
-
-# VSM notation quickstart
-
-
-![w:940](../assets/images/vsm-generated/simple-example.svg)
-
----
-<!-- _class: workshop -->
 # Not Just Process Flow
 
-There are some processes where they only show the steps used to produce a product in their system.
-
-This might be minimally useful, but only as documentation.
+Sometimes a simple visualisation of process steps is presented as a "VSM", but this is not accurate.
 
 ![w:940](../assets/images/not-a-vsm.png)
 
 We will explore more deeply...
 
+
 ---
 <!-- _class: workshop -->
 # Stations
 
-The main flow is a series of work "stations" separated by queues.  Queues are important to understanding the flow of work.
+The main flow is a series of work "stations" or processes separated by queues.  
+Queues are important to understanding the flow of work.
 
 
 <div style="display: flex;">
@@ -118,11 +114,11 @@ The main flow is a series of work "stations" separated by queues.  Queues are im
 <div style="width: 50%;">
 CT = Median cycle time 
 
-Close enough is close enough for our purposes
+Mean cycle time is okay, too.
+</div>
+</div>
 
-Mean is okay, too.
-</div>
-</div>
+Work has high variation, but median/mean times will help with the arithmetic.
 
 ---
 # Connectedness
